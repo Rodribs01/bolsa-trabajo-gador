@@ -5,6 +5,7 @@ node_modules/
 dist/
 .angular/
 coverage/
+*.tsbuildinfo
 
 # Variables de entorno
 .env
