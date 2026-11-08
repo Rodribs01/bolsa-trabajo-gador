@@ -27,17 +27,20 @@ export class User {
   @Column({ name: 'email', length: 150, unique: true })
   email: string;
 
-  @Column({ name: 'celular', length: 20, nullable: true })
-  phone: string;
+  @Column({ name: 'celular', type: 'varchar', length: 20, nullable: true })
+  phone: string | null;
 
   @Column({ name: 'password', length: 255, select: false })
   password: string;
 
-  @Column({ name: 'celular_verificado', default: false })
-  phoneVerified: boolean;
+  @Column({ name: 'correo_verificado', default: false })
+  emailVerified: boolean;
 
   @Column({ name: 'activo', default: true })
   active: boolean;
+
+  @Column({ name: 'version_token', default: 0 })
+  tokenVersion: number;
 
   @Column({ name: 'intentos_fallidos', default: 0 })
   failedAttempts: number;

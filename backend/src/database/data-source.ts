@@ -1,7 +1,6 @@
 import { config } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
-// Lee el .env de la raíz del repositorio, el mismo que usa docker compose
 config({ path: ['../.env', '.env'], quiet: true });
 
 export const dataSourceOptions: DataSourceOptions = {
@@ -12,10 +11,10 @@ export const dataSourceOptions: DataSourceOptions = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   charset: 'utf8mb4',
+  timezone: 'Z',
   entities: [__dirname + '/../**/*.entity.js'],
   migrations: [__dirname + '/migrations/*.js'],
   synchronize: false,
-  // Devuelve las columnas decimal como números y no como texto
   extra: { decimalNumbers: true },
 };
 

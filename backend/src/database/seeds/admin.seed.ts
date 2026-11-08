@@ -28,7 +28,7 @@ export async function seedAdmin(dataSource: DataSource) {
     name: 'Administrador GADOR',
     email: email,
     password: await bcrypt.hash(password, 10),
-    phoneVerified: true,
+    emailVerified: true,
   });
   await userRepository.save(admin);
 

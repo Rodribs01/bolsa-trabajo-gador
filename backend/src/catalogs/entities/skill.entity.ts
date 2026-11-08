@@ -8,8 +8,8 @@ export class Skill {
   @Column({ name: 'nombre', length: 80, unique: true })
   name: string;
 
-  @Column({ name: 'categoria', length: 60, nullable: true })
-  category: string;
+  @Column({ name: 'categoria', type: 'varchar', length: 60, nullable: true })
+  category: string | null;
 
   @Column({ name: 'activo', default: true })
   active: boolean;

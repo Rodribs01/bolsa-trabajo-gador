@@ -66,7 +66,6 @@ const departments = [
   'Pando',
 ];
 
-// Los 35 municipios del departamento de Oruro
 const oruroMunicipalities = [
   'Oruro',
   'Caracollo',

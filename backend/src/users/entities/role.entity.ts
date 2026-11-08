@@ -8,6 +8,6 @@ export class Role {
   @Column({ name: 'nombre', length: 30, unique: true })
   name: string;
 
-  @Column({ name: 'descripcion', length: 150, nullable: true })
-  description: string;
+  @Column({ name: 'descripcion', type: 'varchar', length: 150, nullable: true })
+  description: string | null;
 }
