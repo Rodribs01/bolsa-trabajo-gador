@@ -1,12 +1,15 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
   Logger,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
@@ -19,6 +22,8 @@ import { VerificationCodeType } from '../common/enums/verification-code-type.enu
 import { SmsService } from '../notifications/sms.service.js';
 import { Role } from '../users/entities/role.entity.js';
 import { User } from '../users/entities/user.entity.js';
+import { ChangePhoneDto } from './dto/change-phone.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 import { RegisterApplicantDto } from './dto/register-applicant.dto.js';
 import { ResendOtpDto } from './dto/resend-otp.dto.js';
 import { VerifyOtpDto } from './dto/verify-otp.dto.js';
@@ -30,6 +35,9 @@ const RESEND_WAIT_SECONDS = 60;
 // El primer código más 3 reenvíos por hora
 const OTP_MAX_CODES_PER_HOUR = 4;
 const INVALID_CODE_MESSAGE = 'El código es incorrecto o ya venció';
+const MAX_FAILED_LOGINS = 5;
+const LOCK_MINUTES = 15;
+const INVALID_CREDENTIALS_MESSAGE = 'Correo o contraseña incorrectos';
 
 @Injectable()
 export class AuthService {
@@ -47,6 +55,7 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
     private readonly smsService: SmsService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async registerApplicant(dto: RegisterApplicantDto, ip: string) {
@@ -146,6 +155,95 @@ export class AuthService {
     return genericResponse;
   }
 
+  async login(dto: LoginDto, ip: string) {
+    const user = await this.verifyCredentials(dto.email, dto.password, ip);
+
+    // El postulante debe verificar su celular antes de entrar por primera vez
+    if (user.role.name === RoleName.APPLICANT && !user.phoneVerified) {
+      throw new ForbiddenException({
+        message: 'Debes verificar tu celular antes de ingresar',
+        code: 'CELULAR_SIN_VERIFICAR',
+        email: user.email,
+      });
+    }
+
+    await this.userRepository.update(user.id, { lastLogin: new Date() });
+    await this.auditService.log({
+      userId: user.id,
+      action: AuditAction.LOGIN,
+      tableName: 'usuarios',
+      recordId: user.id,
+      newData: { resultado: 'EXITOSO' },
+      ip: ip,
+    });
+
+    const accessToken = await this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role.name,
+    });
+
+    return {
+      accessToken: accessToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role.name,
+      },
+    };
+  }
+
+  async getCurrentUser(userId: number) {
+    const user = await this.userRepository.findOneOrFail({
+      where: { id: userId },
+      relations: { role: true },
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role.name,
+      phoneVerified: user.phoneVerified,
+      lastLogin: user.lastLogin,
+    };
+  }
+
+  // Permite corregir un número mal escrito, solo si la cuenta aún no está verificada
+  async changePhone(dto: ChangePhoneDto, ip: string) {
+    const user = await this.verifyCredentials(dto.email, dto.password, ip);
+
+    if (user.phoneVerified) {
+      throw new BadRequestException('Tu celular ya fue verificado');
+    }
+
+    await this.checkResendLimits(user.id);
+
+    const previousPhone = user.phone;
+    await this.userRepository.update(user.id, { phone: dto.newPhone });
+    user.phone = dto.newPhone;
+
+    await this.auditService.log({
+      userId: user.id,
+      action: AuditAction.UPDATE,
+      tableName: 'usuarios',
+      recordId: user.id,
+      previousData: { celular: previousPhone },
+      newData: { celular: dto.newPhone },
+      ip: ip,
+    });
+
+    const sent = await this.createAndSendOtp(user);
+    if (!sent) {
+      throw new ServiceUnavailableException(
+        'Actualizamos tu celular, pero no pudimos enviar el código. Solicita uno nuevo.',
+      );
+    }
+    return { message: 'Actualizamos tu celular y enviamos un código nuevo' };
+  }
+
   private async createApplicant(
     dto: RegisterApplicantDto,
     roleId: number,
@@ -199,6 +297,88 @@ export class AuthService {
       return 'Código incorrecto. Agotaste los intentos, solicita un código nuevo.';
     }
     return `Código incorrecto. Intentos restantes: ${remaining}.`;
+  }
+
+  private async verifyCredentials(
+    email: string,
+    password: string,
+    ip: string,
+  ): Promise<User> {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .leftJoinAndSelect('user.role', 'role')
+      .where('user.email = :email', { email: email })
+      .getOne();
+
+    if (!user) {
+      await this.auditFailedLogin(null, email, ip);
+      throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      throw this.accountLockedError(user.lockedUntil);
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      await this.auditFailedLogin(user.id, email, ip);
+      await this.increaseFailedAttempts(user);
+      throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
+    }
+
+    if (!user.active) {
+      throw new ForbiddenException('Tu cuenta está desactivada');
+    }
+
+    await this.userRepository.update(user.id, {
+      failedAttempts: 0,
+      lockedUntil: null,
+    });
+    return user;
+  }
+
+  // Al quinto intento fallido la cuenta se bloquea por 15 minutos
+  private async increaseFailedAttempts(user: User): Promise<void> {
+    const attempts = user.failedAttempts + 1;
+
+    if (attempts >= MAX_FAILED_LOGINS) {
+      const lockedUntil = new Date(Date.now() + LOCK_MINUTES * 60 * 1000);
+      await this.userRepository.update(user.id, {
+        failedAttempts: 0,
+        lockedUntil: lockedUntil,
+      });
+      throw this.accountLockedError(lockedUntil);
+    }
+
+    await this.userRepository.update(user.id, { failedAttempts: attempts });
+  }
+
+  private accountLockedError(lockedUntil: Date): HttpException {
+    return new HttpException(
+      {
+        message:
+          'Tu cuenta está bloqueada temporalmente debido a varios intentos fallidos. Intenta de nuevo más tarde.',
+        code: 'CUENTA_BLOQUEADA',
+        lockedUntil: lockedUntil,
+      },
+      HttpStatus.LOCKED,
+    );
+  }
+
+  private async auditFailedLogin(
+    userId: number | null,
+    email: string,
+    ip: string,
+  ): Promise<void> {
+    await this.auditService.log({
+      userId: userId,
+      action: AuditAction.LOGIN,
+      tableName: 'usuarios',
+      recordId: userId,
+      newData: { resultado: 'FALLIDO', email: email },
+      ip: ip,
+    });
   }
 
   private async checkResendLimits(userId: number): Promise<void> {
