@@ -7,6 +7,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
+import { PASSWORD_MESSAGE, PASSWORD_PATTERN } from './password.rule.js';
 
 const CI_ISSUED_IN = ['LP', 'CB', 'SC', 'OR', 'PT', 'TJ', 'CH', 'BE', 'PD'];
 
@@ -52,9 +53,6 @@ export class RegisterApplicantDto {
   email: string;
 
   @IsString({ message: 'La contraseña es obligatoria' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/, {
-    message:
-      'La contraseña debe tener de 8 a 72 caracteres, con una mayúscula, una minúscula y un número',
-  })
+  @Matches(PASSWORD_PATTERN, { message: PASSWORD_MESSAGE })
   password: string;
 }

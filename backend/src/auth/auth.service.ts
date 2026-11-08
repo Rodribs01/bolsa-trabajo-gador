@@ -9,10 +9,11 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
-import { randomInt } from 'crypto';
+import { createHash, randomBytes, randomInt } from 'crypto';
 import { DataSource, MoreThan, Repository } from 'typeorm';
 import { ApplicantProfile } from '../applicants/entities/applicant-profile.entity.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -23,9 +24,12 @@ import { MailService } from '../notifications/mail.service.js';
 import { Role } from '../users/entities/role.entity.js';
 import { User } from '../users/entities/user.entity.js';
 import { ChangeEmailDto } from './dto/change-email.dto.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterApplicantDto } from './dto/register-applicant.dto.js';
 import { ResendOtpDto } from './dto/resend-otp.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 import { VerificationCode } from './entities/verification-code.entity.js';
 
@@ -38,6 +42,9 @@ const INVALID_CODE_MESSAGE = 'El código es incorrecto o ya venció';
 const MAX_FAILED_LOGINS = 5;
 const LOCK_MINUTES = 15;
 const INVALID_CREDENTIALS_MESSAGE = 'Correo o contraseña incorrectos';
+const RESET_MINUTES = 30;
+const RESET_MAX_PER_HOUR = 3;
+const INVALID_RESET_MESSAGE = 'El enlace no es válido o ya venció';
 
 @Injectable()
 export class AuthService {
@@ -56,6 +63,7 @@ export class AuthService {
     private readonly auditService: AuditService,
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   async registerApplicant(dto: RegisterApplicantDto, ip: string) {
@@ -246,6 +254,152 @@ export class AuthService {
       );
     }
     return { message: 'Actualizamos tu correo y enviamos un código nuevo' };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const genericResponse = {
+      message:
+        'Si el correo está registrado, enviamos un enlace para restablecer la contraseña',
+    };
+
+    const user = await this.userRepository.findOneBy({ email: dto.email });
+    if (!user || !user.active) {
+      return genericResponse;
+    }
+    if (!(await this.canRequestPasswordReset(user.id))) {
+      return genericResponse;
+    }
+
+    await this.codeRepository.update(
+      {
+        userId: user.id,
+        type: VerificationCodeType.PASSWORD_RESET,
+        used: false,
+      },
+      { used: true },
+    );
+
+    const token = randomBytes(32).toString('hex');
+    await this.codeRepository.save(
+      this.codeRepository.create({
+        userId: user.id,
+        type: VerificationCodeType.PASSWORD_RESET,
+        codeHash: this.hashToken(token),
+        expiresAt: new Date(Date.now() + RESET_MINUTES * 60 * 1000),
+      }),
+    );
+
+    const frontendUrl = this.config.get<string>('FRONTEND_URL');
+    const link = `${frontendUrl}/reset-password?token=${token}`;
+    try {
+      await this.mailService.send(
+        user.email,
+        'Restablecer contraseña',
+        `<p>Para restablecer tu contraseña de la Bolsa de Trabajo GADOR, abre este enlace:</p><p><a href="${link}">${link}</a></p><p>Vence en ${RESET_MINUTES} minutos y solo se puede usar una vez. Si no lo pediste, ignora este correo.</p>`,
+      );
+    } catch (error: any) {
+      this.logger.error(`No se pudo enviar el enlace: ${error.message}`);
+    }
+
+    return genericResponse;
+  }
+
+  async resetPassword(dto: ResetPasswordDto, ip: string) {
+    const record = await this.codeRepository.findOne({
+      where: {
+        codeHash: this.hashToken(dto.token),
+        type: VerificationCodeType.PASSWORD_RESET,
+        used: false,
+      },
+    });
+    if (!record || record.expiresAt < new Date()) {
+      throw new BadRequestException(INVALID_RESET_MESSAGE);
+    }
+
+    // El enlace es de un solo uso
+    const result = await this.codeRepository.update(
+      { id: record.id, used: false },
+      { used: true },
+    );
+    if (result.affected !== 1) {
+      throw new BadRequestException(INVALID_RESET_MESSAGE);
+    }
+
+    // Restablecer la contraseña también quita el bloqueo de la cuenta
+    await this.userRepository.update(record.userId, {
+      password: await bcrypt.hash(dto.newPassword, 10),
+      failedAttempts: 0,
+      lockedUntil: null,
+    });
+    await this.auditService.log({
+      userId: record.userId,
+      action: AuditAction.UPDATE,
+      tableName: 'usuarios',
+      recordId: record.userId,
+      newData: { contrasena: 'RESTABLECIDA' },
+      ip: ip,
+    });
+
+    return {
+      message: 'Tu contraseña fue restablecida. Ya puedes iniciar sesión.',
+    };
+  }
+
+  async changePassword(userId: number, dto: ChangePasswordDto, ip: string) {
+    const user = await this.userRepository.findOneOrFail({
+      where: { id: userId },
+      select: { id: true, password: true },
+    });
+
+    const isValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isValid) {
+      throw new BadRequestException('La contraseña actual es incorrecta');
+    }
+    if (dto.newPassword === dto.currentPassword) {
+      throw new BadRequestException(
+        'La contraseña nueva debe ser distinta de la actual',
+      );
+    }
+
+    await this.userRepository.update(user.id, {
+      password: await bcrypt.hash(dto.newPassword, 10),
+    });
+    await this.auditService.log({
+      userId: user.id,
+      action: AuditAction.UPDATE,
+      tableName: 'usuarios',
+      recordId: user.id,
+      newData: { contrasena: 'CAMBIADA' },
+      ip: ip,
+    });
+
+    return { message: 'Tu contraseña fue cambiada correctamente' };
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private async canRequestPasswordReset(userId: number): Promise<boolean> {
+    const lastCode = await this.codeRepository.findOne({
+      where: { userId: userId, type: VerificationCodeType.PASSWORD_RESET },
+      order: { id: 'DESC' },
+    });
+    if (lastCode) {
+      const secondsSinceLast =
+        (Date.now() - lastCode.createdAt.getTime()) / 1000;
+      if (secondsSinceLast < RESEND_WAIT_SECONDS) {
+        return false;
+      }
+    }
+
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const requestsLastHour = await this.codeRepository.countBy({
+      userId: userId,
+      type: VerificationCodeType.PASSWORD_RESET,
+      createdAt: MoreThan(oneHourAgo),
+    });
+    return requestsLastHour < RESET_MAX_PER_HOUR;
   }
 
   private async createApplicant(
