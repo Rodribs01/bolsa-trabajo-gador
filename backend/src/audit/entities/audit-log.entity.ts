@@ -14,7 +14,6 @@ export class AuditLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // Puede ser nulo, por ejemplo en un intento de login con un correo inexistente
   @Column({ name: 'usuario_id', type: 'int', nullable: true })
   userId: number | null;
 

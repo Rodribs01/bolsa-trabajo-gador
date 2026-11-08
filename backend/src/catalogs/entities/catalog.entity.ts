@@ -20,7 +20,6 @@ export class Catalog {
   @Column({ name: 'nombre', length: 100 })
   name: string;
 
-  // Un municipio apunta a su departamento
   @Column({ name: 'padre_id', type: 'int', nullable: true })
   parentId: number | null;
 

@@ -13,7 +13,6 @@ import { dataSourceOptions } from './database/data-source.js';
       envFilePath: ['../.env', '.env'],
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
-    // Límite general: 100 peticiones por minuto por IP
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     AuditModule,
   ],

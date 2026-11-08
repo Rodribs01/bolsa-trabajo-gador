@@ -83,7 +83,6 @@ export class JobOffer {
   @Column({ name: 'salario_a_tratar', default: false })
   salaryToNegotiate: boolean;
 
-  // Lista de beneficios guardada como texto JSON, por ejemplo ["Seguro CNS", "Alimentación"]
   @Column({ name: 'beneficios', type: 'simple-json', nullable: true })
   benefits: string[] | null;
 
