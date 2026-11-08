@@ -11,6 +11,6 @@ export class Setting {
   @Column({ name: 'valor', length: 255 })
   value: string;
 
-  @Column({ name: 'descripcion', length: 200, nullable: true })
-  description: string;
+  @Column({ name: 'descripcion', type: 'varchar', length: 200, nullable: true })
+  description: string | null;
 }
