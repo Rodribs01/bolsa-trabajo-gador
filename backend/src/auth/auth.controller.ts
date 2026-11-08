@@ -14,7 +14,7 @@ import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface.js';
 import { AuthService } from './auth.service.js';
-import { ChangePhoneDto } from './dto/change-phone.dto.js';
+import { ChangeEmailDto } from './dto/change-email.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterApplicantDto } from './dto/register-applicant.dto.js';
 import { ResendOtpDto } from './dto/resend-otp.dto.js';
@@ -45,10 +45,10 @@ export class AuthController {
     return this.authService.resendOtp(dto);
   }
 
-  @Patch('change-phone')
+  @Patch('change-email')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  changePhone(@Body() dto: ChangePhoneDto, @Ip() ip: string) {
-    return this.authService.changePhone(dto, ip);
+  changeEmail(@Body() dto: ChangeEmailDto, @Ip() ip: string) {
+    return this.authService.changeEmail(dto, ip);
   }
 
   @Post('login')

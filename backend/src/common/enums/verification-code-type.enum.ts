@@ -1,4 +1,4 @@
 export enum VerificationCodeType {
-  PHONE_OTP = 'OTP_CELULAR',
+  EMAIL_OTP = 'OTP_CORREO',
   PASSWORD_RESET = 'RECUPERACION',
 }

@@ -19,10 +19,10 @@ import { AuditService } from '../audit/audit.service.js';
 import { AuditAction } from '../common/enums/audit-action.enum.js';
 import { RoleName } from '../common/enums/role-name.enum.js';
 import { VerificationCodeType } from '../common/enums/verification-code-type.enum.js';
-import { SmsService } from '../notifications/sms.service.js';
+import { MailService } from '../notifications/mail.service.js';
 import { Role } from '../users/entities/role.entity.js';
 import { User } from '../users/entities/user.entity.js';
-import { ChangePhoneDto } from './dto/change-phone.dto.js';
+import { ChangeEmailDto } from './dto/change-email.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterApplicantDto } from './dto/register-applicant.dto.js';
 import { ResendOtpDto } from './dto/resend-otp.dto.js';
@@ -54,7 +54,7 @@ export class AuthService {
     private readonly codeRepository: Repository<VerificationCode>,
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
-    private readonly smsService: SmsService,
+    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -97,14 +97,14 @@ export class AuthService {
 
   async verifyOtp(dto: VerifyOtpDto, ip: string) {
     const user = await this.userRepository.findOneBy({ email: dto.email });
-    if (!user || user.phoneVerified) {
+    if (!user || user.emailVerified) {
       throw new BadRequestException(INVALID_CODE_MESSAGE);
     }
 
     const record = await this.codeRepository.findOne({
       where: {
         userId: user.id,
-        type: VerificationCodeType.PHONE_OTP,
+        type: VerificationCodeType.EMAIL_OTP,
         used: false,
       },
       order: { id: 'DESC' },
@@ -120,17 +120,17 @@ export class AuthService {
     }
 
     await this.codeRepository.update(record.id, { used: true });
-    await this.userRepository.update(user.id, { phoneVerified: true });
+    await this.userRepository.update(user.id, { emailVerified: true });
     await this.auditService.log({
       userId: user.id,
       action: AuditAction.UPDATE,
       tableName: 'usuarios',
       recordId: user.id,
-      newData: { celular_verificado: true },
+      newData: { correo_verificado: true },
       ip: ip,
     });
 
-    return { message: 'Tu celular fue verificado correctamente' };
+    return { message: 'Tu correo fue verificado correctamente' };
   }
 
   async resendOtp(dto: ResendOtpDto) {
@@ -140,7 +140,7 @@ export class AuthService {
     };
 
     const user = await this.userRepository.findOneBy({ email: dto.email });
-    if (!user || user.phoneVerified) {
+    if (!user || user.emailVerified) {
       return genericResponse;
     }
 
@@ -158,11 +158,11 @@ export class AuthService {
   async login(dto: LoginDto, ip: string) {
     const user = await this.verifyCredentials(dto.email, dto.password, ip);
 
-    // El postulante debe verificar su celular antes de entrar por primera vez
-    if (user.role.name === RoleName.APPLICANT && !user.phoneVerified) {
+    // El postulante debe verificar su correo antes de entrar por primera vez
+    if (user.role.name === RoleName.APPLICANT && !user.emailVerified) {
       throw new ForbiddenException({
-        message: 'Debes verificar tu celular antes de ingresar',
-        code: 'CELULAR_SIN_VERIFICAR',
+        message: 'Debes verificar tu correo antes de ingresar',
+        code: 'CORREO_SIN_VERIFICAR',
         email: user.email,
       });
     }
@@ -206,42 +206,46 @@ export class AuthService {
       email: user.email,
       phone: user.phone,
       role: user.role.name,
-      phoneVerified: user.phoneVerified,
+      emailVerified: user.emailVerified,
       lastLogin: user.lastLogin,
     };
   }
 
-  // Permite corregir un número mal escrito, solo si la cuenta aún no está verificada
-  async changePhone(dto: ChangePhoneDto, ip: string) {
+  // Permite corregir un correo mal escrito, solo si la cuenta aún no está verificada
+  async changeEmail(dto: ChangeEmailDto, ip: string) {
     const user = await this.verifyCredentials(dto.email, dto.password, ip);
 
-    if (user.phoneVerified) {
-      throw new BadRequestException('Tu celular ya fue verificado');
+    if (user.emailVerified) {
+      throw new BadRequestException('Tu correo ya fue verificado');
     }
 
     await this.checkResendLimits(user.id);
 
-    const previousPhone = user.phone;
-    await this.userRepository.update(user.id, { phone: dto.newPhone });
-    user.phone = dto.newPhone;
+    if (await this.userRepository.existsBy({ email: dto.newEmail })) {
+      throw new ConflictException('El correo ya está registrado');
+    }
+
+    const previousEmail = user.email;
+    await this.userRepository.update(user.id, { email: dto.newEmail });
+    user.email = dto.newEmail;
 
     await this.auditService.log({
       userId: user.id,
       action: AuditAction.UPDATE,
       tableName: 'usuarios',
       recordId: user.id,
-      previousData: { celular: previousPhone },
-      newData: { celular: dto.newPhone },
+      previousData: { email: previousEmail },
+      newData: { email: dto.newEmail },
       ip: ip,
     });
 
     const sent = await this.createAndSendOtp(user);
     if (!sent) {
       throw new ServiceUnavailableException(
-        'Actualizamos tu celular, pero no pudimos enviar el código. Solicita uno nuevo.',
+        'Actualizamos tu correo, pero no pudimos enviar el código. Solicita uno nuevo.',
       );
     }
-    return { message: 'Actualizamos tu celular y enviamos un código nuevo' };
+    return { message: 'Actualizamos tu correo y enviamos un código nuevo' };
   }
 
   private async createApplicant(
@@ -383,7 +387,7 @@ export class AuthService {
 
   private async checkResendLimits(userId: number): Promise<void> {
     const lastCode = await this.codeRepository.findOne({
-      where: { userId: userId, type: VerificationCodeType.PHONE_OTP },
+      where: { userId: userId, type: VerificationCodeType.EMAIL_OTP },
       order: { id: 'DESC' },
     });
     if (lastCode) {
@@ -400,7 +404,7 @@ export class AuthService {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const codesLastHour = await this.codeRepository.countBy({
       userId: userId,
-      type: VerificationCodeType.PHONE_OTP,
+      type: VerificationCodeType.EMAIL_OTP,
       createdAt: MoreThan(oneHourAgo),
     });
     if (codesLastHour >= OTP_MAX_CODES_PER_HOUR) {
@@ -415,7 +419,7 @@ export class AuthService {
     await this.codeRepository.update(
       {
         userId: user.id,
-        type: VerificationCodeType.PHONE_OTP,
+        type: VerificationCodeType.EMAIL_OTP,
         used: false,
       },
       { used: true },
@@ -425,14 +429,18 @@ export class AuthService {
     await this.codeRepository.save(
       this.codeRepository.create({
         userId: user.id,
-        type: VerificationCodeType.PHONE_OTP,
+        type: VerificationCodeType.EMAIL_OTP,
         codeHash: await bcrypt.hash(code, 10),
         expiresAt: new Date(Date.now() + OTP_MINUTES * 60 * 1000),
       }),
     );
 
     try {
-      await this.smsService.sendOtp(user.phone ?? '', user.email, code);
+      await this.mailService.send(
+        user.email,
+        'Código de verificación',
+        `<p>Tu código de verificación de la Bolsa de Trabajo GADOR es <strong>${code}</strong>. Vence en ${OTP_MINUTES} minutos.</p>`,
+      );
       return true;
     } catch (error: any) {
       this.logger.error(`No se pudo enviar el código: ${error.message}`);

@@ -33,8 +33,8 @@ export class User {
   @Column({ name: 'password', length: 255, select: false })
   password: string;
 
-  @Column({ name: 'celular_verificado', default: false })
-  phoneVerified: boolean;
+  @Column({ name: 'correo_verificado', default: false })
+  emailVerified: boolean;
 
   @Column({ name: 'activo', default: true })
   active: boolean;
