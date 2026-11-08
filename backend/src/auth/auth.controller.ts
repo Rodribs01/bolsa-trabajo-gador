@@ -29,7 +29,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register/applicant')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 10, ttl: 3600000 } })
   registerApplicant(@Body() dto: RegisterApplicantDto, @Ip() ip: string) {
     return this.authService.registerApplicant(dto, ip);
   }

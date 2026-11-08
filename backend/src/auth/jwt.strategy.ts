@@ -10,6 +10,7 @@ import { User } from '../users/entities/user.entity.js';
 
 interface JwtPayload {
   sub: number;
+  tokenVersion: number;
 }
 
 @Injectable()
@@ -26,13 +27,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // Una cuenta desactivada pierde el acceso aunque su token siga vigente
+  // Una cuenta desactivada o con la contraseña cambiada pierde el acceso aunque su token siga vigente
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     const user = await this.userRepository.findOne({
       where: { id: payload.sub, active: true },
       relations: { role: true },
     });
-    if (!user) {
+    if (!user || user.tokenVersion !== payload.tokenVersion) {
       throw new UnauthorizedException('Tu sesión ya no es válida');
     }
 

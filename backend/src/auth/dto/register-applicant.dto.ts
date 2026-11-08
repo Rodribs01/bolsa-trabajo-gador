@@ -31,13 +31,13 @@ export class RegisterApplicantDto {
 
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'Los nombres son obligatorios' })
-  @Length(2, 80, { message: 'Los nombres deben tener entre 2 y 80 caracteres' })
+  @Length(2, 74, { message: 'Los nombres deben tener entre 2 y 74 caracteres' })
   firstNames: string;
 
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'Los apellidos son obligatorios' })
-  @Length(2, 80, {
-    message: 'Los apellidos deben tener entre 2 y 80 caracteres',
+  @Length(2, 74, {
+    message: 'Los apellidos deben tener entre 2 y 74 caracteres',
   })
   lastNames: string;
 

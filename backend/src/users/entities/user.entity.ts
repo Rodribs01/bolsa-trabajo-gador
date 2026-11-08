@@ -39,6 +39,9 @@ export class User {
   @Column({ name: 'activo', default: true })
   active: boolean;
 
+  @Column({ name: 'version_token', default: 0 })
+  tokenVersion: number;
+
   @Column({ name: 'intentos_fallidos', default: 0 })
   failedAttempts: number;
 

@@ -5,23 +5,33 @@ import { ConfigService } from '@nestjs/config';
 export class MailService {
   private readonly logger = new Logger(MailService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ConfigService) {
+    const driver = config.get<string>('MAIL_DRIVER');
+
+    if (driver !== 'consola' && driver !== 'brevo') {
+      throw new Error('MAIL_DRIVER debe ser consola o brevo');
+    }
+    if (driver === 'consola' && config.get('NODE_ENV') === 'production') {
+      throw new Error('En producción MAIL_DRIVER debe ser brevo');
+    }
+    if (
+      driver === 'brevo' &&
+      (!config.get('BREVO_API_KEY') || !config.get('MAIL_FROM'))
+    ) {
+      throw new Error('Faltan las variables BREVO_API_KEY o MAIL_FROM');
+    }
+  }
 
   async send(to: string, subject: string, html: string): Promise<void> {
-    const driver = this.config.get<string>('MAIL_DRIVER');
-
-    if (driver === 'consola') {
+    if (this.config.get<string>('MAIL_DRIVER') === 'consola') {
       this.logger.log(`Correo para ${to} | ${subject} | ${html}`);
       return;
-    }
-    if (driver !== 'brevo') {
-      throw new Error('MAIL_DRIVER debe ser consola o brevo');
     }
 
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'api-key': this.config.get<string>('BREVO_API_KEY') ?? '',
+        'api-key': this.config.getOrThrow<string>('BREVO_API_KEY'),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

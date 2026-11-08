@@ -127,8 +127,23 @@ export class AuthService {
       throw new BadRequestException(message);
     }
 
-    await this.codeRepository.update(record.id, { used: true });
-    await this.userRepository.update(user.id, { emailVerified: true });
+    const claimed = await this.codeRepository.update(
+      { id: record.id, used: false },
+      { used: true },
+    );
+    if (claimed.affected !== 1) {
+      throw new BadRequestException(INVALID_CODE_MESSAGE);
+    }
+
+    // Solo se verifica el correo al que se envió el código
+    const verified = await this.userRepository.update(
+      { id: user.id, email: dto.email, emailVerified: false },
+      { emailVerified: true },
+    );
+    if (verified.affected !== 1) {
+      throw new BadRequestException(INVALID_CODE_MESSAGE);
+    }
+
     await this.auditService.log({
       userId: user.id,
       action: AuditAction.UPDATE,
@@ -189,6 +204,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role.name,
+      tokenVersion: user.tokenVersion,
     });
 
     return {
@@ -223,6 +239,9 @@ export class AuthService {
   async changeEmail(dto: ChangeEmailDto, ip: string) {
     const user = await this.verifyCredentials(dto.email, dto.password, ip);
 
+    if (user.role.name !== RoleName.APPLICANT) {
+      throw new ForbiddenException('Esta opción es solo para postulantes');
+    }
     if (user.emailVerified) {
       throw new BadRequestException('Tu correo ya fue verificado');
     }
@@ -233,8 +252,20 @@ export class AuthService {
       throw new ConflictException('El correo ya está registrado');
     }
 
+    // Los códigos y enlaces enviados al correo anterior dejan de servir
+    await this.codeRepository.update(
+      { userId: user.id, used: false },
+      { used: true },
+    );
+
     const previousEmail = user.email;
-    await this.userRepository.update(user.id, { email: dto.newEmail });
+    const changed = await this.userRepository.update(
+      { id: user.id, email: previousEmail, emailVerified: false },
+      { email: dto.newEmail },
+    );
+    if (changed.affected !== 1) {
+      throw new BadRequestException('Tu correo ya fue verificado');
+    }
     user.email = dto.newEmail;
 
     await this.auditService.log({
@@ -291,15 +322,15 @@ export class AuthService {
 
     const frontendUrl = this.config.get<string>('FRONTEND_URL');
     const link = `${frontendUrl}/reset-password?token=${token}`;
-    try {
-      await this.mailService.send(
+    this.mailService
+      .send(
         user.email,
         'Restablecer contraseña',
         `<p>Para restablecer tu contraseña de la Bolsa de Trabajo GADOR, abre este enlace:</p><p><a href="${link}">${link}</a></p><p>Vence en ${RESET_MINUTES} minutos y solo se puede usar una vez. Si no lo pediste, ignora este correo.</p>`,
-      );
-    } catch (error: any) {
-      this.logger.error(`No se pudo enviar el enlace: ${error.message}`);
-    }
+      )
+      .catch((error: Error) => {
+        this.logger.error(`No se pudo enviar el enlace: ${error.message}`);
+      });
 
     return genericResponse;
   }
@@ -331,6 +362,7 @@ export class AuthService {
       failedAttempts: 0,
       lockedUntil: null,
     });
+    await this.closeSessions(record.userId);
     await this.auditService.log({
       userId: record.userId,
       action: AuditAction.UPDATE,
@@ -364,6 +396,15 @@ export class AuthService {
     await this.userRepository.update(user.id, {
       password: await bcrypt.hash(dto.newPassword, 10),
     });
+    await this.closeSessions(user.id);
+    await this.codeRepository.update(
+      {
+        userId: user.id,
+        type: VerificationCodeType.PASSWORD_RESET,
+        used: false,
+      },
+      { used: true },
+    );
     await this.auditService.log({
       userId: user.id,
       action: AuditAction.UPDATE,
@@ -373,7 +414,12 @@ export class AuthService {
       ip: ip,
     });
 
-    return { message: 'Tu contraseña fue cambiada correctamente' };
+    return { message: 'Tu contraseña fue cambiada. Inicia sesión de nuevo.' };
+  }
+
+  // Cambiar la contraseña cierra todas las sesiones abiertas de la cuenta
+  private async closeSessions(userId: number): Promise<void> {
+    await this.userRepository.increment({ id: userId }, 'tokenVersion', 1);
   }
 
   private hashToken(token: string): string {
@@ -443,15 +489,14 @@ export class AuthService {
   private async registerFailedAttempt(
     record: VerificationCode,
   ): Promise<string> {
-    const attempts = record.attempts + 1;
-    const remaining = OTP_MAX_ATTEMPTS - attempts;
-
-    await this.codeRepository.update(record.id, {
-      attempts: attempts,
-      used: remaining === 0,
+    await this.codeRepository.increment({ id: record.id }, 'attempts', 1);
+    const updated = await this.codeRepository.findOneByOrFail({
+      id: record.id,
     });
+    const remaining = OTP_MAX_ATTEMPTS - updated.attempts;
 
-    if (remaining === 0) {
+    if (remaining <= 0) {
+      await this.codeRepository.update(record.id, { used: true });
       return 'Código incorrecto. Agotaste los intentos, solicita un código nuevo.';
     }
     return `Código incorrecto. Intentos restantes: ${remaining}.`;
@@ -498,9 +543,10 @@ export class AuthService {
 
   // Al quinto intento fallido la cuenta se bloquea por 15 minutos
   private async increaseFailedAttempts(user: User): Promise<void> {
-    const attempts = user.failedAttempts + 1;
+    await this.userRepository.increment({ id: user.id }, 'failedAttempts', 1);
+    const updated = await this.userRepository.findOneByOrFail({ id: user.id });
 
-    if (attempts >= MAX_FAILED_LOGINS) {
+    if (updated.failedAttempts >= MAX_FAILED_LOGINS) {
       const lockedUntil = new Date(Date.now() + LOCK_MINUTES * 60 * 1000);
       await this.userRepository.update(user.id, {
         failedAttempts: 0,
@@ -508,8 +554,6 @@ export class AuthService {
       });
       throw this.accountLockedError(lockedUntil);
     }
-
-    await this.userRepository.update(user.id, { failedAttempts: attempts });
   }
 
   private accountLockedError(lockedUntil: Date): HttpException {
