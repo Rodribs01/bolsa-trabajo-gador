@@ -30,6 +30,9 @@ export class VerificationCode {
   @Column({ name: 'expira_en', type: 'datetime' })
   expiresAt: Date;
 
+  @Column({ name: 'intentos', default: 0 })
+  attempts: number;
+
   @Column({ name: 'usado', default: false })
   used: boolean;
 
