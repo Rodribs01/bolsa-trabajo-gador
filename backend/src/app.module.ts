@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { CompaniesModule } from './companies/companies.module.js';
 import { dataSourceOptions } from './database/data-source.js';
 
 @Module({
@@ -17,6 +18,7 @@ import { dataSourceOptions } from './database/data-source.js';
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     AuditModule,
     AuthModule,
+    CompaniesModule,
   ],
   providers: [
     {
