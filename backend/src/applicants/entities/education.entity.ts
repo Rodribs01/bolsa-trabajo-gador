@@ -30,6 +30,11 @@ export class Education {
   @Column({ name: 'anio_titulacion', type: 'smallint' })
   graduationYear: number;
 
-  @Column({ name: 'nro_titulo_nacional', type: 'varchar', length: 30, nullable: true })
+  @Column({
+    name: 'nro_titulo_nacional',
+    type: 'varchar',
+    length: 30,
+    nullable: true,
+  })
   nationalTitleNumber: string | null;
 }

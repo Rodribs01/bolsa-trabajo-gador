@@ -38,7 +38,13 @@ export class Experience {
   endDate: string | null;
 
   // Se calcula a partir de las fechas al guardar
-  @Column({ name: 'anios', type: 'decimal', precision: 4, scale: 1, default: 0 })
+  @Column({
+    name: 'anios',
+    type: 'decimal',
+    precision: 4,
+    scale: 1,
+    default: 0,
+  })
   years: number;
 
   @Column({ name: 'descripcion', type: 'text', nullable: true })
