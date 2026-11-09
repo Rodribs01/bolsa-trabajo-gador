@@ -7,12 +7,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
+import { Application } from '../applications/entities/application.entity.js';
 import { AuditService } from '../audit/audit.service.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { Setting } from '../catalogs/entities/setting.entity.js';
 import { Skill } from '../catalogs/entities/skill.entity.js';
 import { AuditAction } from '../common/enums/audit-action.enum.js';
 import { PaginationDto } from '../common/dto/pagination.dto.js';
+import { ApplicationStatus } from '../common/enums/application-status.enum.js';
 import { CatalogType } from '../common/enums/catalog-type.enum.js';
 import { CompanyStatus } from '../common/enums/company-status.enum.js';
 import { JobOfferStatus } from '../common/enums/job-offer-status.enum.js';
@@ -66,6 +68,8 @@ export class JobOffersService {
     private readonly skillRepository: Repository<Skill>,
     @InjectRepository(Setting)
     private readonly settingRepository: Repository<Setting>,
+    @InjectRepository(Application)
+    private readonly applicationRepository: Repository<Application>,
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
   ) {}
@@ -145,18 +149,23 @@ export class JobOffersService {
       ? { companyId: company.id, status: dto.status }
       : { companyId: company.id };
 
-    const [items, total] = await this.offerRepository.findAndCount({
+    const [offers, total] = await this.offerRepository.findAndCount({
       where: where,
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
 
+    const applicationCounts = await this.countApplications(offers);
+    for (const offer of offers) {
+      offer.applicationCount = applicationCounts[offer.id] ?? 0;
+    }
+
     const activeCount = await this.countActiveOffers(company.id);
     const activeLimit = await this.getActiveLimit();
 
     return {
-      items: items,
+      items: offers,
       total: total,
       page: page,
       limit: limit,
@@ -364,6 +373,35 @@ export class JobOffersService {
         'Tu empresa debe estar aprobada por la Gobernación',
       );
     }
+  }
+
+  // Las postulaciones retiradas no cuentan, igual que en el listado de postulantes
+  private async countApplications(offers: JobOffer[]) {
+    const counts: Record<number, number> = {};
+    if (offers.length === 0) {
+      return counts;
+    }
+
+    const offerIds: number[] = [];
+    for (const offer of offers) {
+      offerIds.push(offer.id);
+    }
+
+    const rows = await this.applicationRepository
+      .createQueryBuilder('application')
+      .select('application.jobOfferId', 'jobOfferId')
+      .addSelect('COUNT(*)', 'total')
+      .where('application.jobOfferId IN (:...offerIds)', { offerIds: offerIds })
+      .andWhere('application.status != :withdrawn', {
+        withdrawn: ApplicationStatus.WITHDRAWN,
+      })
+      .groupBy('application.jobOfferId')
+      .getRawMany();
+
+    for (const row of rows) {
+      counts[row.jobOfferId] = Number(row.total);
+    }
+    return counts;
   }
 
   private async countActiveOffers(companyId: number): Promise<number> {

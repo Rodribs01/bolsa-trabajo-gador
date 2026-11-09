@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApplicantProfile } from '../applicants/entities/applicant-profile.entity.js';
+import { Application } from '../applications/entities/application.entity.js';
 import { AuditModule } from '../audit/audit.module.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { Setting } from '../catalogs/entities/setting.entity.js';
@@ -26,6 +27,7 @@ import { PublicJobOffersService } from './public-job-offers.service.js';
       Setting,
       Favorite,
       ApplicantProfile,
+      Application,
     ]),
     AuditModule,
   ],

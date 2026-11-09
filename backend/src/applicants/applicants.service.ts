@@ -24,6 +24,7 @@ const CVS_FOLDER = 'private/cvs';
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 const MINIMUM_AGE = 18;
 const EARLIEST_BIRTH_DATE = '1930-01-01';
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class ApplicantsService {
@@ -45,7 +46,7 @@ export class ApplicantsService {
     private readonly fileStorage: FileStorageService,
   ) {}
 
-  async getMyProfile(userId: number) {
+  async getFullProfile(userId: number) {
     const profile = await this.profileRepository.findOne({
       where: { userId: userId },
       relations: { user: true, municipality: true, profession: true },
@@ -62,6 +63,13 @@ export class ApplicantsService {
       where: { profileId: profile.id },
       order: { startDate: 'DESC', id: 'DESC' },
     });
+    // Se recalcula al leer porque un trabajo sin fecha de fin sigue sumando años
+    for (const experience of experiences) {
+      experience.years = this.calculateYears(
+        experience.startDate,
+        experience.endDate,
+      );
+    }
     const skills = await this.skillRepository.find({
       where: { profileId: profile.id },
       relations: { skill: true },
@@ -176,7 +184,7 @@ export class ApplicantsService {
       ip: ip,
     });
 
-    return this.getMyProfile(userId);
+    return this.getFullProfile(userId);
   }
 
   async updatePhoto(
@@ -272,7 +280,13 @@ export class ApplicantsService {
     if (!profile.cv) {
       throw new NotFoundException('Aún no subiste tu CV');
     }
+    return this.openCv(profile);
+  }
 
+  openCv(profile: ApplicantProfile): StreamableFile {
+    if (!profile.cv) {
+      throw new NotFoundException('El CV no está disponible');
+    }
     const stream = this.fileStorage.open(CVS_FOLDER, profile.cv);
     if (!stream) {
       throw new NotFoundException('El CV no está disponible');
@@ -281,6 +295,28 @@ export class ApplicantsService {
       type: 'application/pdf',
       disposition: `inline; filename="cv-postulante-${profile.id}.pdf"`,
     });
+  }
+
+  // Sin fecha de fin, los años se cuentan hasta hoy
+  calculateYears(
+    startDate: string,
+    endDate: string | null | undefined,
+  ): number {
+    const today = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'America/La_Paz',
+    });
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate ?? today).getTime();
+    const days = (end - start) / MILLISECONDS_PER_DAY;
+    return Math.round((days / 365.25) * 10) / 10;
+  }
+
+  calculateTotalYears(experiences: Experience[]): number {
+    let total = 0;
+    for (const experience of experiences) {
+      total += this.calculateYears(experience.startDate, experience.endDate);
+    }
+    return Math.round(total * 10) / 10;
   }
 
   // Pesos de RF02: datos 20, foto 10, formación 20, experiencia 15, habilidades 15, idiomas 5, CV 15

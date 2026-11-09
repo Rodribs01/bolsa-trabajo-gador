@@ -27,7 +27,6 @@ import { Experience } from './entities/experience.entity.js';
 const MAX_EDUCATIONS = 20;
 const MAX_EXPERIENCES = 20;
 const EARLIEST_START_DATE = '1950-01-01';
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class ApplicantSectionsService {
@@ -153,7 +152,10 @@ export class ApplicantSectionsService {
         location: dto.location || null,
         startDate: dto.startDate,
         endDate: dto.endDate ?? null,
-        years: this.calculateYears(dto.startDate, dto.endDate),
+        years: this.applicantsService.calculateYears(
+          dto.startDate,
+          dto.endDate,
+        ),
         description: dto.description || null,
       }),
     );
@@ -189,7 +191,10 @@ export class ApplicantSectionsService {
     experience.location = dto.location || null;
     experience.startDate = dto.startDate;
     experience.endDate = dto.endDate ?? null;
-    experience.years = this.calculateYears(dto.startDate, dto.endDate);
+    experience.years = this.applicantsService.calculateYears(
+      dto.startDate,
+      dto.endDate,
+    );
     experience.description = dto.description || null;
     await this.experienceRepository.save(experience);
 
@@ -487,16 +492,5 @@ export class ApplicantSectionsService {
     if (endDate && endDate > today) {
       throw new BadRequestException('La fecha de fin no puede ser futura');
     }
-  }
-
-  // Sin fecha de fin, los años se cuentan hasta hoy
-  private calculateYears(
-    startDate: string,
-    endDate: string | null | undefined,
-  ): number {
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate ?? this.today()).getTime();
-    const days = (end - start) / MILLISECONDS_PER_DAY;
-    return Math.round((days / 365.25) * 10) / 10;
   }
 }

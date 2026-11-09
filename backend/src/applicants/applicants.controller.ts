@@ -46,7 +46,7 @@ export class ApplicantsController {
 
   @Get()
   getProfile(@Req() request: AuthenticatedRequest) {
-    return this.applicantsService.getMyProfile(request.user.id);
+    return this.applicantsService.getFullProfile(request.user.id);
   }
 
   @Put()
