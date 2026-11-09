@@ -49,6 +49,8 @@
 
 .list-group {
   --bs-list-group-bg: #fff;
+  --bs-list-group-active-bg: #771013;
+  --bs-list-group-active-border-color: #771013;
 }
 
 .input-group-text {

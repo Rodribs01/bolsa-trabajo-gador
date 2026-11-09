@@ -1,0 +1,244 @@
+<div class="container py-4">
+  <h1 class="h3 fw-bold mb-3">Validación de empresas</h1>
+
+  <ul class="nav nav-tabs flex-nowrap overflow-auto mb-0" role="tablist">
+    @for (tab of tabs; track tab.status) {
+      <li class="nav-item" role="presentation">
+        <button
+          type="button"
+          role="tab"
+          class="nav-link text-nowrap"
+          [class.active]="status() === tab.status"
+          [attr.aria-selected]="status() === tab.status"
+          (click)="selectTab(tab.status)"
+        >
+          {{ tab.label }}
+          <span class="badge rounded-pill text-bg-light border ms-1">{{
+            counts()[tab.status] ?? 0
+          }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+
+  @if (successMessage()) {
+    <div class="alert alert-success small mt-3">{{ successMessage() }}</div>
+  }
+  @if (errorMessage() && !selected()) {
+    <div class="alert alert-danger small mt-3">{{ errorMessage() }}</div>
+  }
+
+  <div class="row g-3 mt-0">
+    <div [class]="selected() ? 'col-lg-7' : 'col-12'">
+      <div class="card border-top-0 rounded-top-0">
+        @if (loading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-secondary" role="status">
+              <span class="visually-hidden">Cargando empresas</span>
+            </div>
+          </div>
+        } @else if (companies().length === 0) {
+          <div class="card-body text-center text-secondary py-5">
+            <i class="bi bi-buildings fs-2 d-block mb-2"></i>
+            No hay empresas en este estado.
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  <th scope="col">NIT</th>
+                  <th scope="col">Razón social</th>
+                  <th scope="col">Rubro</th>
+                  <th scope="col">Registro</th>
+                  <th scope="col"><span class="visually-hidden">Ver</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (company of companies(); track company.id) {
+                  <tr
+                    style="cursor: pointer"
+                    [class.table-active]="selected()?.id === company.id"
+                    (click)="select(company)"
+                  >
+                    <td class="font-monospace small">{{ company.nit }}</td>
+                    <td class="fw-semibold">{{ company.businessName }}</td>
+                    <td>{{ company.sector.name }}</td>
+                    <td class="text-nowrap">{{ date(company.createdAt) }}</td>
+                    <td class="text-end">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-link"
+                        [attr.aria-label]="'Ver ' + company.businessName"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <span class="small text-secondary">{{ total() }} registros</span>
+        @if (totalPages() > 1) {
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="page() === 1">
+              <button type="button" class="page-link" (click)="goToPage(page() - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item active">
+              <span class="page-link">Página {{ page() }} de {{ totalPages() }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="page() >= totalPages()">
+              <button type="button" class="page-link" (click)="goToPage(page() + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        }
+      </div>
+    </div>
+
+    @if (selected(); as company) {
+      <aside class="col-lg-5">
+        <div class="card">
+          <div class="card-body p-4">
+            <div class="d-flex gap-3 align-items-start mb-3">
+              <app-company-logo
+                [name]="company.businessName"
+                [logo]="company.logo"
+                [large]="true"
+              />
+              <div class="flex-grow-1">
+                <span class="badge" [class]="statusClass(company.status)">{{
+                  statusLabel(company.status)
+                }}</span>
+                <h2 class="h5 fw-bold mb-0 mt-1">{{ company.businessName }}</h2>
+                <div class="small text-secondary">Registrada el {{ date(company.createdAt) }}</div>
+              </div>
+              <button
+                type="button"
+                class="btn-close"
+                aria-label="Cerrar detalle"
+                (click)="selected.set(null)"
+              ></button>
+            </div>
+
+            <dl class="row small mb-3">
+              <dt class="col-5 text-secondary fw-normal">NIT</dt>
+              <dd class="col-7">{{ company.nit }}</dd>
+              <dt class="col-5 text-secondary fw-normal">Rubro</dt>
+              <dd class="col-7">{{ company.sector.name }}</dd>
+              <dt class="col-5 text-secondary fw-normal">Representante legal</dt>
+              <dd class="col-7">
+                {{ company.legalRepresentative }} · CI {{ company.representativeCi }}
+              </dd>
+              <dt class="col-5 text-secondary fw-normal">Celular</dt>
+              <dd class="col-7">{{ company.phone }}</dd>
+              <dt class="col-5 text-secondary fw-normal">Correo</dt>
+              <dd class="col-7 text-break">{{ company.corporateEmail }}</dd>
+              <dt class="col-5 text-secondary fw-normal">Dirección</dt>
+              <dd class="col-7">{{ company.address }}, {{ company.municipality.name }}</dd>
+              <dt class="col-5 text-secondary fw-normal">Descripción</dt>
+              <dd class="col-7 texto-largo">{{ company.description }}</dd>
+              @if (company.rejectionReason) {
+                <dt class="col-5 text-secondary fw-normal">Motivo de rechazo</dt>
+                <dd class="col-7">{{ company.rejectionReason }}</dd>
+              }
+            </dl>
+
+            <div class="d-flex align-items-center gap-3 border rounded p-3 mb-3">
+              <i class="bi bi-file-earmark-pdf-fill fs-3 text-danger"></i>
+              <div class="flex-grow-1 small fw-semibold">Documento de respaldo</div>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="viewDocument(company)"
+              >
+                <i class="bi bi-box-arrow-up-right me-1"></i> Ver documento
+              </button>
+            </div>
+
+            @if (errorMessage()) {
+              <div class="alert alert-danger small">{{ errorMessage() }}</div>
+            }
+
+            @if (showReject()) {
+              <div class="mb-3">
+                <label for="reject-reason" class="form-label small fw-semibold mb-1"
+                  >Motivo del rechazo (la empresa lo verá)</label
+                >
+                <textarea
+                  id="reject-reason"
+                  class="form-control"
+                  rows="3"
+                  maxlength="1000"
+                  [value]="rejectReason()"
+                  (input)="onReasonInput($event)"
+                ></textarea>
+                <div class="d-flex justify-content-end gap-2 mt-2">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    (click)="cancelReject()"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-danger"
+                    [disabled]="sending()"
+                    (click)="reject(company)"
+                  >
+                    Confirmar rechazo
+                  </button>
+                </div>
+              </div>
+            }
+
+            <div class="d-flex flex-wrap gap-2">
+              @if (company.status === 'PENDIENTE_VALIDACION' || company.status === 'SUSPENDIDA') {
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  [disabled]="sending()"
+                  (click)="approve(company)"
+                >
+                  <i class="bi bi-check-lg me-1"></i>
+                  {{ company.status === 'SUSPENDIDA' ? 'Reactivar' : 'Aprobar' }}
+                </button>
+              }
+              @if (company.status === 'PENDIENTE_VALIDACION' && !showReject()) {
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  [disabled]="sending()"
+                  (click)="showReject.set(true)"
+                >
+                  <i class="bi bi-x-lg me-1"></i> Rechazar
+                </button>
+              }
+              @if (company.status === 'APROBADA') {
+                <button
+                  type="button"
+                  class="btn btn-outline-dark"
+                  [disabled]="sending()"
+                  (click)="suspend(company)"
+                >
+                  <i class="bi bi-slash-circle me-1"></i> Suspender
+                </button>
+              }
+            </div>
+            <p class="small text-secondary mt-3 mb-0">
+              <i class="bi bi-info-circle me-1"></i> Cada acción queda registrada en la auditoría.
+            </p>
+          </div>
+        </div>
+      </aside>
+    }
+  </div>
+</div>

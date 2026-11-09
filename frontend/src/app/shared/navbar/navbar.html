@@ -78,6 +78,25 @@
               >Mis ofertas</a
             >
           </li>
+        } @else if (authService.hasRole('SUPERADMIN')) {
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/admin/companies"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Empresas</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/admin/job-offers"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Ofertas por revisar</a
+            >
+          </li>
         } @else if (!authService.currentUser()) {
           <li class="nav-item">
             <a class="nav-link" routerLink="/" fragment="como" (click)="closeMenu()"

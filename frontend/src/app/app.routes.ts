@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
 import { ChangePassword } from './pages/account/change-password/change-password';
+import { Companies } from './pages/admin/companies/companies';
+import { OffersReview } from './pages/admin/offers-review/offers-review';
 import { ApplicantDetail } from './pages/company/applicant-detail/applicant-detail';
 import { Dashboard as CompanyDashboard } from './pages/company/dashboard/dashboard';
 import { OfferApplicants } from './pages/company/offer-applicants/offer-applicants';
@@ -54,6 +56,16 @@ export const routes: Routes = [
       { path: 'job-offers/:id/edit', component: OfferForm, title: 'Editar oferta' },
       { path: 'job-offers/:id/applications', component: OfferApplicants, title: 'Postulantes' },
       { path: 'applications/:id', component: ApplicantDetail, title: 'Perfil del postulante' },
+    ],
+  },
+  {
+    path: 'admin',
+    canActivate: [roleGuard],
+    data: { roles: ['SUPERADMIN'] },
+    children: [
+      { path: '', redirectTo: 'companies', pathMatch: 'full' },
+      { path: 'companies', component: Companies, title: 'Validación de empresas' },
+      { path: 'job-offers', component: OffersReview, title: 'Ofertas por revisar' },
     ],
   },
   {
