@@ -440,3 +440,52 @@ img.emp-logo {
 .primera-mayuscula::first-letter {
   text-transform: uppercase;
 }
+
+.st-borrador {
+  background: #6c757d;
+  color: #fff;
+}
+
+.st-revision {
+  background: #ffc107;
+  color: #3d2e00;
+}
+
+.st-publicada {
+  background: #198754;
+  color: #fff;
+}
+
+.st-seleccion {
+  background: #1f4fa8;
+  color: #fff;
+}
+
+.st-cerrada {
+  background: #212529;
+  color: #fff;
+}
+
+.st-anulada {
+  background: #c62828;
+  color: #fff;
+}
+
+.st-aprobada {
+  background: #198754;
+  color: #fff;
+}
+
+.st-rechazada {
+  background: #c62828;
+  color: #fff;
+}
+
+.st-suspendida {
+  background: #212529;
+  color: #fff;
+}
+
+.bg-ocre-50 {
+  background: var(--gd-ocre-50) !important;
+}

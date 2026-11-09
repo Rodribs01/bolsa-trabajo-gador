@@ -23,6 +23,11 @@ export function formatSalary(offer: JobOfferSummary): string {
   return `${formatMoney(offer.minSalary)} - ${formatMoney(offer.maxSalary)}`;
 }
 
+export function formatYears(value: number): string {
+  const years = Number(value);
+  return `${years.toLocaleString('es-BO')} ${years === 1 ? 'año' : 'años'}`;
+}
+
 export function initials(name: string): string {
   const words = name.trim().split(' ');
   let result = '';

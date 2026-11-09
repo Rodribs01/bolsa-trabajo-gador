@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
 import { ChangePassword } from './pages/account/change-password/change-password';
+import { ApplicantDetail } from './pages/company/applicant-detail/applicant-detail';
+import { Dashboard as CompanyDashboard } from './pages/company/dashboard/dashboard';
+import { OfferApplicants } from './pages/company/offer-applicants/offer-applicants';
+import { OfferForm } from './pages/company/offer-form/offer-form';
+import { Offers } from './pages/company/offers/offers';
 import { Applications } from './pages/applicant/applications/applications';
 import { Dashboard as ApplicantDashboard } from './pages/applicant/dashboard/dashboard';
 import { Favorites } from './pages/applicant/favorites/favorites';
@@ -36,6 +41,19 @@ export const routes: Routes = [
       { path: 'profile', component: ApplicantProfile, title: 'Mi perfil' },
       { path: 'applications', component: Applications, title: 'Mis postulaciones' },
       { path: 'favorites', component: Favorites, title: 'Favoritos' },
+    ],
+  },
+  {
+    path: 'company',
+    canActivate: [roleGuard],
+    data: { roles: ['EMPRESA'] },
+    children: [
+      { path: '', component: CompanyDashboard, title: 'Panel de la empresa' },
+      { path: 'job-offers', component: Offers, title: 'Mis ofertas' },
+      { path: 'job-offers/new', component: OfferForm, title: 'Nueva oferta' },
+      { path: 'job-offers/:id/edit', component: OfferForm, title: 'Editar oferta' },
+      { path: 'job-offers/:id/applications', component: OfferApplicants, title: 'Postulantes' },
+      { path: 'applications/:id', component: ApplicantDetail, title: 'Perfil del postulante' },
     ],
   },
   {

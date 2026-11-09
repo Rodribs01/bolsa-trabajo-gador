@@ -1,0 +1,266 @@
+<div class="container py-4">
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando el perfil</span>
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+    <a routerLink="/company/job-offers" class="btn btn-outline-primary">Volver a mis ofertas</a>
+  } @else if (detail(); as detail) {
+    <nav aria-label="Ruta" class="small mb-2">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a routerLink="/company/job-offers">Mis ofertas</a></li>
+        <li class="breadcrumb-item">
+          <a [routerLink]="['/company/job-offers', detail.offer.id, 'applications']">{{
+            detail.offer.title
+          }}</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">{{ fullName(detail) }}</li>
+      </ol>
+    </nav>
+
+    <div class="row g-3">
+      <div class="col-xl-8 d-flex flex-column gap-3">
+        <div class="card">
+          <div class="card-body p-4 d-flex flex-wrap gap-4 align-items-center">
+            @if (detail.applicant.photo) {
+              <img
+                [src]="photoUrl(detail)"
+                alt=""
+                class="foto-perfil"
+                style="width: 88px; height: 88px"
+              />
+            } @else {
+              <span class="foto-perfil" style="width: 88px; height: 88px; font-size: 30px">{{
+                letters(detail)
+              }}</span>
+            }
+            <div class="flex-grow-1" style="min-width: 220px">
+              <h1 class="h4 fw-bold mb-0">{{ fullName(detail) }}</h1>
+              <div class="text-secondary mb-2">
+                {{ detail.applicant.profession ?? 'Sin profesión registrada' }} ·
+                {{ years(totalYears(detail.applicant.experiences)) }} de experiencia
+              </div>
+              <div class="small d-flex flex-wrap gap-3">
+                <span
+                  ><i class="bi bi-person-vcard me-1 text-secondary"></i>CI
+                  {{ detail.applicant.ci }} {{ detail.applicant.ciIssuedIn }}</span
+                >
+                @if (age(detail.applicant.birthDate); as age) {
+                  <span><i class="bi bi-cake2 me-1 text-secondary"></i>{{ age }} años</span>
+                }
+                @if (detail.applicant.municipality) {
+                  <span
+                    ><i class="bi bi-geo-alt me-1 text-secondary"></i
+                    >{{ detail.applicant.municipality }}</span
+                  >
+                }
+                <span
+                  ><i class="bi bi-telephone me-1 text-secondary"></i
+                  >{{ detail.applicant.phone }}</span
+                >
+                <span
+                  ><i class="bi bi-envelope me-1 text-secondary"></i
+                  >{{ detail.applicant.email }}</span
+                >
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="fs-2 fw-bold lh-1" [class]="matchColor(detail.matchPercentage)">
+                {{ detail.matchPercentage }} %
+              </div>
+              <div class="small text-secondary">coincidencia</div>
+            </div>
+            @if (detail.applicant.hasCv) {
+              <button type="button" class="btn btn-primary" (click)="downloadCv()">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Ver CV (PDF)
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (detail.applicant.summary) {
+          <div class="card">
+            <div class="card-body p-4">
+              <h2 class="h6 fw-bold mb-2">Resumen profesional</h2>
+              <p class="mb-0 texto-largo">{{ detail.applicant.summary }}</p>
+            </div>
+          </div>
+        }
+
+        <div class="card">
+          <div class="card-body p-4">
+            <h2 class="h6 fw-bold mb-3">Habilidades frente a la oferta</h2>
+            @if (matchedSkills(detail).length > 0) {
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                @for (skill of matchedSkills(detail); track skill.skillId) {
+                  <span class="badge bg-success-subtle text-success-emphasis fs-6">
+                    <i class="bi bi-check-circle-fill me-1"></i>{{ skill.name }}
+                    <span class="fw-normal"
+                      >· {{ skill.required ? 'obligatoria' : 'deseable' }}</span
+                    >
+                  </span>
+                }
+              </div>
+            }
+            @if (missingSkills(detail).length > 0) {
+              <div class="small">
+                <span class="text-secondary me-1">Pedidas por la oferta y que no declara:</span>
+                @for (skill of missingSkills(detail); track skill.skillId) {
+                  <span class="badge border border-danger-subtle text-danger-emphasis bg-white me-1"
+                    >{{ skill.name }} ({{ skill.required ? 'obligatoria' : 'deseable' }})</span
+                  >
+                }
+              </div>
+            }
+            @if (detail.applicant.skills.length > 0) {
+              <div class="small text-secondary mt-3 mb-1">Todas sus habilidades</div>
+              <div class="d-flex flex-wrap gap-1">
+                @for (skill of detail.applicant.skills; track skill.id) {
+                  <span class="chip">{{ skill.name }} · {{ level(skill.level) }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body p-4">
+            <h2 class="h6 fw-bold mb-3">Experiencia laboral</h2>
+            @for (experience of detail.applicant.experiences; track experience.id) {
+              <div class="mb-3">
+                <div class="d-flex flex-wrap justify-content-between">
+                  <div class="fw-semibold">
+                    {{ experience.position }} · {{ experience.company }}
+                  </div>
+                  <span class="small text-secondary"
+                    >{{ period(experience) }} · {{ years(experience.years) }}</span
+                  >
+                </div>
+                @if (experience.description) {
+                  <div class="small text-secondary texto-largo">{{ experience.description }}</div>
+                }
+              </div>
+            } @empty {
+              <p class="small text-secondary mb-0">No registró experiencia.</p>
+            }
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-7">
+            <div class="card h-100">
+              <div class="card-body p-4">
+                <h2 class="h6 fw-bold mb-3">Formación académica</h2>
+                @for (education of detail.applicant.educations; track education.id) {
+                  <div class="small mb-2">
+                    <div class="fw-semibold">{{ education.title }}</div>
+                    <div class="text-secondary">
+                      {{ education.institution }} · {{ education.graduationYear }}
+                      @if (education.nationalTitleNumber) {
+                        · Título N.º {{ education.nationalTitleNumber }}
+                      }
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="small text-secondary mb-0">No registró formación.</p>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="card h-100">
+              <div class="card-body p-4">
+                <h2 class="h6 fw-bold mb-3">Idiomas</h2>
+                <ul class="list-unstyled small mb-0">
+                  @for (language of detail.applicant.languages; track language.id) {
+                    <li class="d-flex justify-content-between">
+                      <span>{{ language.name }}</span>
+                      <span class="text-secondary">{{ level(language.level) }}</span>
+                    </li>
+                  } @empty {
+                    <li class="text-secondary">No registró idiomas.</li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="col-xl-4">
+        <div class="card">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h6 fw-bold mb-0">Estado de la postulación</h2>
+              <span class="badge" [class]="statusClass(detail.status)">{{
+                statusLabel(detail.status)
+              }}</span>
+            </div>
+            <ol class="list-unstyled linea-tiempo mb-3">
+              @for (step of timelineSteps(detail); track step) {
+                <li>
+                  <span class="punto" [class.hecho]="stepDone(detail, step)">
+                    @if (stepDone(detail, step)) {
+                      <i class="bi bi-check"></i>
+                    }
+                  </span>
+                  <div
+                    [class.fw-semibold]="stepDone(detail, step)"
+                    [class.text-secondary]="!stepDone(detail, step)"
+                  >
+                    {{ statusLabel(step) }}
+                  </div>
+                </li>
+              }
+              @if (detail.status === 'RECHAZADO') {
+                <li>
+                  <span class="punto bg-danger"><i class="bi bi-x"></i></span>
+                  <div class="fw-semibold text-danger">Rechazado</div>
+                </li>
+              }
+            </ol>
+
+            @if (successMessage()) {
+              <div class="alert alert-success small">{{ successMessage() }}</div>
+            }
+            @if (actionError()) {
+              <div class="alert alert-danger small">{{ actionError() }}</div>
+            }
+
+            @if (nextStatus(detail.status); as next) {
+              <div class="d-flex flex-column gap-2">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="sending()"
+                  (click)="changeStatus(next)"
+                >
+                  <i class="bi bi-arrow-right-circle me-1"></i> Pasar a {{ statusLabel(next) }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  [disabled]="sending()"
+                  (click)="changeStatus('RECHAZADO')"
+                >
+                  <i class="bi bi-x-circle me-1"></i> Rechazar postulación
+                </button>
+              </div>
+            } @else {
+              <p class="small text-secondary mb-0">
+                <i class="bi bi-info-circle me-1"></i> La postulación llegó a su estado final.
+              </p>
+            }
+            <p class="small text-secondary mt-3 mb-0">
+              Postuló el {{ date(detail.createdAt) }}. Cada estado solo avanza al siguiente paso o a
+              Rechazado.
+            </p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  }
+</div>

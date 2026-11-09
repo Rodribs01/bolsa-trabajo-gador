@@ -68,6 +68,16 @@
               >Mi perfil</a
             >
           </li>
+        } @else if (authService.hasRole('EMPRESA')) {
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/company/job-offers"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Mis ofertas</a
+            >
+          </li>
         } @else if (!authService.currentUser()) {
           <li class="nav-item">
             <a class="nav-link" routerLink="/" fragment="como" (click)="closeMenu()"

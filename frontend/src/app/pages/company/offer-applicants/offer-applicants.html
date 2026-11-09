@@ -1,0 +1,185 @@
+<div class="container py-4">
+  <nav aria-label="Ruta" class="small mb-2">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a routerLink="/company/job-offers">Mis ofertas</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Postulantes</li>
+    </ol>
+  </nav>
+
+  @if (offer(); as offer) {
+    <div class="card mb-3">
+      <div class="card-body d-flex flex-wrap align-items-center gap-3">
+        <div class="flex-grow-1" style="min-width: 240px">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <h1 class="h4 fw-bold mb-0">{{ offer.title }}</h1>
+            <span class="badge" [class]="offerClass(offer.status)">{{
+              offerLabel(offer.status)
+            }}</span>
+          </div>
+          <div class="small text-secondary">
+            {{ offer.vacancies }} {{ offer.vacancies === 1 ? 'plaza' : 'plazas' }} · Cierra el
+            {{ date(offer.closingDate) }}
+          </div>
+        </div>
+        <div class="d-flex gap-4 text-center">
+          <div>
+            <div class="fs-4 fw-bold lh-1">{{ totalCount() }}</div>
+            <div class="small text-secondary">postulantes</div>
+          </div>
+          <div>
+            <div class="fs-4 fw-bold lh-1 text-warning-emphasis">{{ countFor('POSTULADO') }}</div>
+            <div class="small text-secondary">sin ver</div>
+          </div>
+          <div>
+            <div class="fs-4 fw-bold lh-1">{{ offer.totalViews }}</div>
+            <div class="small text-secondary">vistas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="d-flex flex-wrap gap-1 mb-3">
+    <button
+      type="button"
+      class="btn btn-sm"
+      [class.btn-primary]="filter() === ''"
+      [class.btn-outline-secondary]="filter() !== ''"
+      (click)="setFilter('')"
+    >
+      Todos <span class="opacity-75">{{ totalCount() }}</span>
+    </button>
+    @for (status of filterStatuses; track status) {
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="filter() === status"
+        [class.btn-outline-secondary]="filter() !== status"
+        (click)="setFilter(status)"
+      >
+        {{ statusLabel(status) }} <span class="opacity-75">{{ countFor(status) }}</span>
+      </button>
+    }
+  </div>
+  <p class="small text-secondary">
+    Ordenados de mayor a menor coincidencia. Al abrir el perfil o el CV, la postulación pasa a
+    "Visto".
+  </p>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger small">{{ errorMessage() }}</div>
+  }
+  @if (cvError()) {
+    <div class="alert alert-danger small">{{ cvError() }}</div>
+  }
+
+  @if (loading() && !result()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando postulantes</span>
+      </div>
+    </div>
+  } @else if (result(); as result) {
+    @if (result.items.length === 0) {
+      <div class="card">
+        <div class="card-body text-center text-secondary py-5">
+          <i class="bi bi-people fs-2 d-block mb-2"></i>
+          @if (filter()) {
+            No hay postulantes en ese estado.
+          } @else {
+            Esta oferta aún no tiene postulantes.
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="d-flex flex-column gap-2">
+        @for (card of result.items; track card.id) {
+          <div class="card card-hover">
+            <div class="card-body py-3 d-flex flex-wrap align-items-center gap-3">
+              @if (card.applicant.photo) {
+                <img
+                  [src]="photoUrl(card)"
+                  alt=""
+                  class="foto-perfil flex-shrink-0"
+                  style="width: 52px; height: 52px"
+                />
+              } @else {
+                <span
+                  class="foto-perfil flex-shrink-0"
+                  style="width: 52px; height: 52px; font-size: 18px"
+                  aria-hidden="true"
+                  >{{ letters(card) }}</span
+                >
+              }
+              <div style="flex: 1 1 0; min-width: 200px">
+                <div class="d-flex align-items-center gap-2">
+                  <a
+                    [routerLink]="['/company/applications', card.id]"
+                    class="fw-bold text-body text-decoration-none"
+                    >{{ fullName(card) }}</a
+                  >
+                  @if (card.status === 'POSTULADO') {
+                    <span class="badge rounded-pill bg-warning text-dark">Nuevo</span>
+                  }
+                </div>
+                <div class="small text-secondary">
+                  {{ card.applicant.profession ?? 'Sin profesión' }} ·
+                  {{ years(card.applicant.yearsOfExperience) }} de experiencia
+                  @if (card.applicant.municipality) {
+                    · {{ card.applicant.municipality }}
+                  }
+                </div>
+              </div>
+              <div class="text-center" style="width: 110px">
+                <div class="fs-4 fw-bold lh-1" [class]="matchColor(card.matchPercentage)">
+                  {{ card.matchPercentage }} %
+                </div>
+                <div class="small text-secondary">coincidencia</div>
+              </div>
+              <div style="width: 140px">
+                <span class="badge" [class]="statusClass(card.status)">{{
+                  statusLabel(card.status)
+                }}</span>
+              </div>
+              <div class="d-flex gap-1">
+                <a
+                  [routerLink]="['/company/applications', card.id]"
+                  class="btn btn-sm btn-outline-primary"
+                  >Ver perfil</a
+                >
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary"
+                  title="Ver CV"
+                  [attr.aria-label]="'Ver CV de ' + fullName(card)"
+                  (click)="downloadCv(card)"
+                >
+                  <i class="bi bi-file-earmark-pdf"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+      @if (totalPages() > 1) {
+        <nav aria-label="Paginación" class="mt-3 d-flex justify-content-end">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="page() === 1">
+              <button type="button" class="page-link" (click)="goToPage(page() - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item active">
+              <span class="page-link">Página {{ page() }} de {{ totalPages() }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="page() >= totalPages()">
+              <button type="button" class="page-link" (click)="goToPage(page() + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      }
+    }
+  }
+</div>
