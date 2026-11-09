@@ -19,7 +19,11 @@ import { dataSourceOptions } from './database/data-source.js';
       envFilePath: ['../.env', '.env'],
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60000, limit: 100 }],
+      errorMessage:
+        'Demasiadas solicitudes. Espera un momento y vuelve a intentarlo',
+    }),
     ApplicantsModule,
     ApplicationsModule,
     AuditModule,

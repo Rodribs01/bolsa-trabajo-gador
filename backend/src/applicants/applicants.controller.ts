@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { RoleName } from '../common/enums/role-name.enum.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
@@ -59,6 +60,7 @@ export class ApplicantsController {
   }
 
   @Post('photo')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('photo', {
@@ -74,6 +76,7 @@ export class ApplicantsController {
   }
 
   @Post('cv')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('cv', {

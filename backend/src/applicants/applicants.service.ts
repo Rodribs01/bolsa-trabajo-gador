@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { AuditService } from '../audit/audit.service.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { AuditAction } from '../common/enums/audit-action.enum.js';
@@ -205,14 +206,22 @@ export class ApplicantsService {
     const profile = await this.findProfile(userId);
     const fileName = await this.fileStorage.save(PHOTOS_FOLDER, file);
 
+    let updated = false;
     try {
-      await this.profileRepository.update(
-        { id: profile.id },
+      const result = await this.profileRepository.update(
+        { id: profile.id, photo: profile.photo ?? IsNull() },
         { photo: fileName },
       );
+      updated = result.affected === 1;
     } catch (error) {
       await this.fileStorage.delete(PHOTOS_FOLDER, fileName);
       throw error;
+    }
+    if (!updated) {
+      await this.fileStorage.delete(PHOTOS_FOLDER, fileName);
+      throw new ConflictException(
+        'Tu foto ya se actualizó con otra subida. Vuelve a cargar la página',
+      );
     }
 
     await this.updateCompletion(profile.id);
@@ -249,11 +258,22 @@ export class ApplicantsService {
     const profile = await this.findProfile(userId);
     const fileName = await this.fileStorage.save(CVS_FOLDER, file);
 
+    let updated = false;
     try {
-      await this.profileRepository.update({ id: profile.id }, { cv: fileName });
+      const result = await this.profileRepository.update(
+        { id: profile.id, cv: profile.cv ?? IsNull() },
+        { cv: fileName },
+      );
+      updated = result.affected === 1;
     } catch (error) {
       await this.fileStorage.delete(CVS_FOLDER, fileName);
       throw error;
+    }
+    if (!updated) {
+      await this.fileStorage.delete(CVS_FOLDER, fileName);
+      throw new ConflictException(
+        'Tu CV ya se actualizó con otra subida. Vuelve a cargar la página',
+      );
     }
 
     const completionPercentage = await this.updateCompletion(profile.id);
