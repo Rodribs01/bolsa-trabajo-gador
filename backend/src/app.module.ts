@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { CatalogsModule } from './catalogs/catalogs.module.js';
 import { CompaniesModule } from './companies/companies.module.js';
 import { JobOffersModule } from './job-offers/job-offers.module.js';
 import { dataSourceOptions } from './database/data-source.js';
@@ -19,6 +20,7 @@ import { dataSourceOptions } from './database/data-source.js';
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     AuditModule,
     AuthModule,
+    CatalogsModule,
     CompaniesModule,
     JobOffersModule,
   ],
