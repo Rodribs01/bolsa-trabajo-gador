@@ -86,7 +86,7 @@ export class JobOffer {
   @Column({ name: 'beneficios', type: 'simple-json', nullable: true })
   benefits: string[] | null;
 
-  @Column({ name: 'fecha_cierre', type: 'date' })
+  @Column({ name: 'fecha_cierre', type: 'date', utc: true })
   closingDate: string;
 
   @Column({ name: 'numero_plazas', default: 1 })

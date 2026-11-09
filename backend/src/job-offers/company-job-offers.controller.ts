@@ -74,6 +74,15 @@ export class CompanyJobOffersController {
     return this.jobOffersService.submit(request.user.id, id, ip);
   }
 
+  @Post(':id/duplicate')
+  duplicate(
+    @Req() request: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Ip() ip: string,
+  ) {
+    return this.jobOffersService.duplicate(request.user.id, id, ip);
+  }
+
   @Patch(':id/close')
   close(
     @Req() request: AuthenticatedRequest,

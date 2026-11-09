@@ -40,7 +40,7 @@ export class ApplicantProfile {
   @Column({ name: 'apellidos', length: 80 })
   lastNames: string;
 
-  @Column({ name: 'fecha_nacimiento', type: 'date', nullable: true })
+  @Column({ name: 'fecha_nacimiento', type: 'date', nullable: true, utc: true })
   birthDate: string | null;
 
   @Column({ name: 'direccion', type: 'varchar', length: 200, nullable: true })

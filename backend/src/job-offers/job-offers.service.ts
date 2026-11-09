@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { AuditService } from '../audit/audit.service.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
+import { Setting } from '../catalogs/entities/setting.entity.js';
 import { Skill } from '../catalogs/entities/skill.entity.js';
 import { AuditAction } from '../common/enums/audit-action.enum.js';
 import { PaginationDto } from '../common/dto/pagination.dto.js';
@@ -39,6 +40,14 @@ const ADMIN_DETAIL_RELATIONS = {
   company: { sector: true },
 };
 
+const DEFAULT_ACTIVE_LIMIT = 5;
+// Cuentan como activas las ofertas en revisión, publicadas y en selección
+const ACTIVE_STATUSES = [
+  JobOfferStatus.IN_REVIEW,
+  JobOfferStatus.PUBLISHED,
+  JobOfferStatus.IN_SELECTION,
+];
+
 interface StatusChangeFields {
   observation?: string | null;
   publishedAt?: Date;
@@ -55,6 +64,8 @@ export class JobOffersService {
     private readonly catalogRepository: Repository<Catalog>,
     @InjectRepository(Skill)
     private readonly skillRepository: Repository<Skill>,
+    @InjectRepository(Setting)
+    private readonly settingRepository: Repository<Setting>,
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
   ) {}
@@ -141,7 +152,17 @@ export class JobOffersService {
       take: limit,
     });
 
-    return { items: items, total: total, page: page, limit: limit };
+    const activeCount = await this.countActiveOffers(company.id);
+    const activeLimit = await this.getActiveLimit();
+
+    return {
+      items: items,
+      total: total,
+      page: page,
+      limit: limit,
+      activeCount: activeCount,
+      activeLimit: activeLimit,
+    };
   }
 
   async findCompanyOffer(userId: number, id: number): Promise<JobOffer> {
@@ -162,6 +183,7 @@ export class JobOffersService {
     const offer = await this.getOwnOffer(company.id, id);
 
     this.checkClosingDate(offer.closingDate);
+    await this.checkActiveLimit(company.id);
     await this.changeStatus(
       offer,
       [JobOfferStatus.DRAFT],
@@ -171,6 +193,72 @@ export class JobOffersService {
       { observation: null },
     );
     return this.findCompanyOffer(userId, id);
+  }
+
+  // La copia queda en BORRADOR y conserva de qué oferta salió
+  async duplicate(userId: number, id: number, ip: string) {
+    const company = await this.getCompany(userId);
+    this.checkCompanyApproved(company);
+    const original = await this.offerRepository.findOne({
+      where: { id: id, companyId: company.id },
+      relations: { professions: true, skills: true },
+    });
+    if (!original) {
+      throw new NotFoundException('La oferta no existe');
+    }
+
+    const copyId = await this.dataSource.transaction(async (manager) => {
+      const copy = manager.create(JobOffer, {
+        companyId: company.id,
+        status: JobOfferStatus.DRAFT,
+        title: original.title,
+        description: original.description,
+        requiredRequirements: original.requiredRequirements,
+        desiredRequirements: original.desiredRequirements,
+        yearsOfExperience: original.yearsOfExperience,
+        contractTypeId: original.contractTypeId,
+        modalityId: original.modalityId,
+        municipalityId: original.municipalityId,
+        minSalary: original.minSalary,
+        maxSalary: original.maxSalary,
+        salaryToNegotiate: original.salaryToNegotiate,
+        benefits: original.benefits,
+        closingDate: original.closingDate,
+        vacancies: original.vacancies,
+        sourceOfferId: original.id,
+      });
+      await manager.save(copy);
+
+      for (const profession of original.professions) {
+        await manager.save(
+          manager.create(JobOfferProfession, {
+            jobOfferId: copy.id,
+            professionId: profession.professionId,
+          }),
+        );
+      }
+      for (const skill of original.skills) {
+        await manager.save(
+          manager.create(JobOfferSkill, {
+            jobOfferId: copy.id,
+            skillId: skill.skillId,
+            required: skill.required,
+          }),
+        );
+      }
+      return copy.id;
+    });
+
+    await this.auditService.log({
+      userId: userId,
+      action: AuditAction.CREATE,
+      tableName: 'ofertas',
+      recordId: copyId,
+      newData: { estado: JobOfferStatus.DRAFT, oferta_origen_id: original.id },
+      ip: ip,
+    });
+
+    return this.findCompanyOffer(userId, copyId);
   }
 
   async close(userId: number, id: number, ip: string) {
@@ -274,6 +362,34 @@ export class JobOffersService {
     if (company.status !== CompanyStatus.APPROVED) {
       throw new ForbiddenException(
         'Tu empresa debe estar aprobada por la Gobernación',
+      );
+    }
+  }
+
+  private async countActiveOffers(companyId: number): Promise<number> {
+    return this.offerRepository.countBy({
+      companyId: companyId,
+      status: In(ACTIVE_STATUSES),
+    });
+  }
+
+  private async getActiveLimit(): Promise<number> {
+    const setting = await this.settingRepository.findOneBy({
+      key: 'limite_ofertas_activas',
+    });
+    if (setting && Number(setting.value) > 0) {
+      return Number(setting.value);
+    }
+    return DEFAULT_ACTIVE_LIMIT;
+  }
+
+  private async checkActiveLimit(companyId: number): Promise<void> {
+    const activeCount = await this.countActiveOffers(companyId);
+    const activeLimit = await this.getActiveLimit();
+
+    if (activeCount >= activeLimit) {
+      throw new BadRequestException(
+        `Alcanzaste el límite de ofertas activas (${activeLimit}). Cierra o anula una para enviar otra`,
       );
     }
   }
