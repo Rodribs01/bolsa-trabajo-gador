@@ -30,11 +30,11 @@ export class Experience {
   @Column({ name: 'lugar', type: 'varchar', length: 100, nullable: true })
   location: string | null;
 
-  @Column({ name: 'fecha_inicio', type: 'date' })
+  @Column({ name: 'fecha_inicio', type: 'date', utc: true })
   startDate: string;
 
   // Si es nula, el postulante sigue trabajando ahí
-  @Column({ name: 'fecha_fin', type: 'date', nullable: true })
+  @Column({ name: 'fecha_fin', type: 'date', nullable: true, utc: true })
   endDate: string | null;
 
   // Se calcula a partir de las fechas al guardar
