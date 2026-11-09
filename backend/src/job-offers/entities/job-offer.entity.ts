@@ -130,4 +130,6 @@ export class JobOffer {
 
   @UpdateDateColumn({ name: 'actualizado_en' })
   updatedAt: Date;
+
+  applicationCount?: number;
 }
