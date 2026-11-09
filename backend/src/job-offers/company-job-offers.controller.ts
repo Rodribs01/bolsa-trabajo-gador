@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { RoleName } from '../common/enums/role-name.enum.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
@@ -47,6 +48,7 @@ export class CompanyJobOffersController {
   }
 
   @Post()
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   create(
     @Req() request: AuthenticatedRequest,
     @Body() dto: SaveJobOfferDto,
@@ -75,6 +77,7 @@ export class CompanyJobOffersController {
   }
 
   @Post(':id/duplicate')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   duplicate(
     @Req() request: AuthenticatedRequest,
     @Param('id', ParseIntPipe) id: number,

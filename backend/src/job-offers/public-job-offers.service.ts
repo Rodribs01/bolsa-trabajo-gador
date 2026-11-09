@@ -100,9 +100,13 @@ export class PublicJobOffersService {
     dto: SearchJobOffersDto,
   ): void {
     if (dto.keyword) {
+      const safeKeyword = dto.keyword
+        .replace(/\\/g, '\\\\')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_');
       query.andWhere(
         '(offer.title LIKE :keyword OR offer.description LIKE :keyword OR company.businessName LIKE :keyword)',
-        { keyword: `%${dto.keyword}%` },
+        { keyword: `%${safeKeyword}%` },
       );
     }
     if (dto.professionId) {

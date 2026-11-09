@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -15,6 +16,7 @@ import { JobOfferProfession } from './job-offer-profession.entity.js';
 import { JobOfferSkill } from './job-offer-skill.entity.js';
 
 @Entity('ofertas')
+@Index(['status', 'closingDate'])
 export class JobOffer {
   @PrimaryGeneratedColumn()
   id: number;

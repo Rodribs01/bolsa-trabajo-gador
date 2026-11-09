@@ -1,22 +1,9 @@
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
+import { PaginationDto } from '../../common/dto/pagination.dto.js';
 import { CompanyStatus } from '../../common/enums/company-status.enum.js';
 
-export class ListCompaniesDto {
+export class ListCompaniesDto extends PaginationDto {
   @IsOptional()
   @IsEnum(CompanyStatus, { message: 'El estado no es válido' })
   status?: CompanyStatus;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt({ message: 'La página debe ser un número' })
-  @Min(1, { message: 'La página debe ser mayor que 0' })
-  page?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt({ message: 'El límite debe ser un número' })
-  @Min(1, { message: 'El límite debe ser mayor que 0' })
-  @Max(100, { message: 'El límite debe ser como máximo 100' })
-  limit?: number;
 }

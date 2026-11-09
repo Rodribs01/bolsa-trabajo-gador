@@ -70,16 +70,14 @@ export class CompaniesService {
     });
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    const logoName = logo
-      ? await this.fileStorage.save(LOGOS_FOLDER, logo)
-      : null;
-    const documentName = await this.fileStorage.save(
-      DOCUMENTS_FOLDER,
-      document,
-    );
-
+    let logoName: string | null = null;
+    let documentName: string | null = null;
     let company: Company;
     try {
+      if (logo) {
+        logoName = await this.fileStorage.save(LOGOS_FOLDER, logo);
+      }
+      documentName = await this.fileStorage.save(DOCUMENTS_FOLDER, document);
       company = await this.createCompany(
         dto,
         role.id,
@@ -320,11 +318,13 @@ export class CompaniesService {
 
   private async deleteFiles(
     logoName: string | null,
-    documentName: string,
+    documentName: string | null,
   ): Promise<void> {
     if (logoName) {
       await this.fileStorage.delete(LOGOS_FOLDER, logoName);
     }
-    await this.fileStorage.delete(DOCUMENTS_FOLDER, documentName);
+    if (documentName) {
+      await this.fileStorage.delete(DOCUMENTS_FOLDER, documentName);
+    }
   }
 }

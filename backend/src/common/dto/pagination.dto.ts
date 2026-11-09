@@ -6,6 +6,7 @@ export class PaginationDto {
   @Type(() => Number)
   @IsInt({ message: 'La página debe ser un número' })
   @Min(1, { message: 'La página debe ser mayor que 0' })
+  @Max(100000, { message: 'La página es demasiado alta' })
   page?: number;
 
   @IsOptional()

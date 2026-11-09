@@ -42,7 +42,14 @@ export class CompaniesController {
         { name: 'logo', maxCount: 1 },
         { name: 'supportDocument', maxCount: 1 },
       ],
-      { limits: { fileSize: MAX_FILE_BYTES } },
+      {
+        limits: {
+          fileSize: MAX_FILE_BYTES,
+          files: 2,
+          fields: 15,
+          fieldSize: 4096,
+        },
+      },
     ),
   )
   register(
