@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApplicantsModule } from './applicants/applicants.module.js';
+import { ApplicationsModule } from './applications/applications.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CatalogsModule } from './catalogs/catalogs.module.js';
@@ -20,6 +21,7 @@ import { dataSourceOptions } from './database/data-source.js';
     TypeOrmModule.forRoot(dataSourceOptions),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     ApplicantsModule,
+    ApplicationsModule,
     AuditModule,
     AuthModule,
     CatalogsModule,

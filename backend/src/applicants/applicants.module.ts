@@ -29,5 +29,6 @@ import { Experience } from './entities/experience.entity.js';
   ],
   controllers: [ApplicantsController],
   providers: [ApplicantsService, ApplicantSectionsService],
+  exports: [ApplicantsService],
 })
 export class ApplicantsModule {}

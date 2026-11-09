@@ -75,11 +75,51 @@ export class PublicJobOffersService {
     };
   }
 
-  // Solo se muestran ofertas publicadas, vigentes y de empresas aprobadas
-  private visibleOffersQuery(): SelectQueryBuilder<JobOffer> {
-    const today = new Date().toLocaleDateString('en-CA', {
+  findOpenOffer(id: number): Promise<JobOffer | null> {
+    return this.visibleOffersQuery()
+      .andWhere('offer.id = :id', { id: id })
+      .getOne();
+  }
+
+  isOpen(offer: JobOffer): boolean {
+    return (
+      offer.status === JobOfferStatus.PUBLISHED &&
+      offer.company.status === CompanyStatus.APPROVED &&
+      offer.closingDate >= this.today()
+    );
+  }
+
+  toPublicSummary(offer: JobOffer) {
+    return {
+      id: offer.id,
+      title: offer.title,
+      closingDate: offer.closingDate,
+      publishedAt: offer.publishedAt,
+      minSalary: offer.minSalary,
+      maxSalary: offer.maxSalary,
+      salaryToNegotiate: offer.salaryToNegotiate,
+      contractType: offer.contractType.name,
+      modality: offer.modality.name,
+      municipality: offer.municipality.name,
+      company: {
+        id: offer.company.id,
+        businessName: offer.company.businessName,
+        logo: offer.company.logo,
+        description: offer.company.description,
+        sector: offer.company.sector.name,
+      },
+    };
+  }
+
+  private today(): string {
+    return new Date().toLocaleDateString('en-CA', {
       timeZone: 'America/La_Paz',
     });
+  }
+
+  // Solo se muestran ofertas publicadas, vigentes y de empresas aprobadas
+  private visibleOffersQuery(): SelectQueryBuilder<JobOffer> {
+    const today = this.today();
 
     return this.offerRepository
       .createQueryBuilder('offer')
@@ -147,27 +187,5 @@ export class PublicJobOffersService {
       query.orderBy('offer.publishedAt', 'DESC');
     }
     query.addOrderBy('offer.id', 'DESC');
-  }
-
-  private toPublicSummary(offer: JobOffer) {
-    return {
-      id: offer.id,
-      title: offer.title,
-      closingDate: offer.closingDate,
-      publishedAt: offer.publishedAt,
-      minSalary: offer.minSalary,
-      maxSalary: offer.maxSalary,
-      salaryToNegotiate: offer.salaryToNegotiate,
-      contractType: offer.contractType.name,
-      modality: offer.modality.name,
-      municipality: offer.municipality.name,
-      company: {
-        id: offer.company.id,
-        businessName: offer.company.businessName,
-        logo: offer.company.logo,
-        description: offer.company.description,
-        sector: offer.company.sector.name,
-      },
-    };
   }
 }
