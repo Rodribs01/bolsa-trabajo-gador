@@ -1,0 +1,184 @@
+<div
+  class="modal d-block"
+  tabindex="-1"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="apply-title"
+  (click)="closed.emit()"
+>
+  <div
+    class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="modal-content">
+      <div class="aguayo"></div>
+      @if (sentMatch() !== null) {
+        <div class="modal-body p-4 p-md-5 text-center">
+          <span class="gd-icono mb-3 bg-success-subtle text-success">
+            <i class="bi bi-check-lg"></i>
+          </span>
+          <h2 id="apply-title" class="h4 fw-bold mb-2">¡Postulación enviada!</h2>
+          <p class="text-secondary mb-1">
+            Tu postulación a <strong class="text-body">{{ offer().title }}</strong> llegó a
+            {{ offer().company.businessName }}.
+          </p>
+          <p class="text-secondary mb-4">
+            Coincidencia registrada: <strong class="text-body">{{ sentMatch() }} %</strong>. Puedes
+            seguir su estado en Mis postulaciones.
+          </p>
+          <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a routerLink="/applicant/applications" class="btn btn-primary"
+              >Ver mis postulaciones</a
+            >
+            <a routerLink="/job-offers" class="btn btn-outline-primary">Seguir buscando</a>
+          </div>
+        </div>
+      } @else {
+        <div class="modal-header">
+          <h2 id="apply-title" class="modal-title h5 fw-bold">
+            <i class="bi bi-send me-2 text-guinda"></i>Confirmar postulación
+          </h2>
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Cerrar"
+            (click)="closed.emit()"
+          ></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-4">
+            <div class="col-md-7">
+              <div class="d-flex gap-3 align-items-center mb-2">
+                <app-company-logo
+                  [name]="offer().company.businessName"
+                  [logo]="offer().company.logo"
+                />
+                <div>
+                  <div class="fw-bold">{{ offer().title }}</div>
+                  <div class="small text-secondary">{{ offer().company.businessName }}</div>
+                </div>
+              </div>
+              <div class="d-flex flex-wrap gap-1 mb-3">
+                <span class="chip"><i class="bi bi-geo-alt"></i>{{ offer().municipality }}</span>
+                <span class="chip"><i class="bi bi-cash-coin"></i>{{ salary() }}</span>
+                <span class="chip"
+                  ><i class="bi bi-calendar-event"></i>Cierra {{ closingDate() }}</span
+                >
+              </div>
+
+              @if (canApply()) {
+                <div class="small fw-semibold text-secondary text-uppercase mb-2">
+                  Se enviará a la empresa
+                </div>
+                <ul class="list-unstyled d-flex flex-column gap-1 mb-3">
+                  <li>
+                    <i class="bi bi-person-vcard me-2 text-guinda"></i>Tu perfil (datos, formación,
+                    experiencia, habilidades e idiomas)
+                  </li>
+                  <li><i class="bi bi-file-earmark-pdf me-2 text-guinda"></i>Tu CV en PDF</li>
+                  <li>
+                    <i class="bi bi-telephone me-2 text-guinda"></i>Tu celular y correo de contacto
+                  </li>
+                </ul>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="apply-accept"
+                    (change)="onAcceptChange($event)"
+                  />
+                  <label class="form-check-label" for="apply-accept">
+                    Autorizo compartir mis datos con esta empresa para este proceso de selección.
+                  </label>
+                </div>
+              } @else {
+                <div class="alert alert-warning small mb-2">
+                  Para postular necesitas más del {{ threshold }} % de tu perfil y tu CV en PDF. Tu
+                  perfil está al {{ profile().completionPercentage }} %.
+                </div>
+                <ul class="list-unstyled small mb-0">
+                  @for (item of missing(); track item.label) {
+                    <li class="py-1">
+                      <i class="bi me-2 text-guinda" [class]="item.icon"></i>{{ item.label }}
+                      <span class="text-secondary">(+{{ item.points }} %)</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+            @if (preview(); as preview) {
+              <div class="col-md-5">
+                <div class="border rounded p-3 h-100">
+                  <div class="small fw-semibold text-secondary text-uppercase">
+                    Coincidencia con la oferta
+                  </div>
+                  @if (preview.requiredTotal + preview.desiredTotal === 0) {
+                    <p class="small text-secondary mt-2 mb-0">
+                      Esta oferta no pide habilidades específicas.
+                    </p>
+                  } @else {
+                    <div class="d-flex align-items-baseline gap-2">
+                      <span class="display-6 fw-bold text-success">{{ preview.percentage }} %</span>
+                      <span class="text-secondary">{{ matchLabel(preview.percentage) }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px">
+                      <div
+                        class="progress-bar bg-success"
+                        [style.width.%]="preview.percentage"
+                      ></div>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-1">
+                      <span>Habilidades obligatorias</span>
+                      <strong>{{ preview.requiredMatched }} / {{ preview.requiredTotal }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-2">
+                      <span>Habilidades deseables</span>
+                      <strong>{{ preview.desiredMatched }} / {{ preview.desiredTotal }}</strong>
+                    </div>
+                    @if (preview.missing.length > 0) {
+                      <div class="small border-top pt-2">
+                        <span class="text-secondary">Te falta:</span>
+                        @for (skill of preview.missing; track skill.id) {
+                          <span class="badge skill ms-1">{{ skill.name }}</span>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          @if (errorMessage()) {
+            <div class="alert alert-danger small mt-3 mb-0">{{ errorMessage() }}</div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closed.emit()">
+            Cancelar
+          </button>
+          @if (canApply()) {
+            <button
+              type="button"
+              class="btn btn-primary btn-lg"
+              [disabled]="!accepted() || sending()"
+              (click)="confirm()"
+            >
+              @if (sending()) {
+                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+              } @else {
+                <i class="bi bi-check-lg me-1"></i>
+              }
+              Confirmar postulación
+            </button>
+          } @else {
+            <a routerLink="/applicant/profile" class="btn btn-primary btn-lg"
+              >Completar mi perfil</a
+            >
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop show"></div>

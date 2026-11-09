@@ -1,0 +1,154 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h2 class="h5 fw-bold mb-0">Experiencia laboral</h2>
+  @if (!showForm()) {
+    <button type="button" class="btn btn-ocre" (click)="startAdd()">
+      <i class="bi bi-plus-lg me-1"></i> Agregar experiencia
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="alert alert-danger small">{{ errorMessage() }}</div>
+}
+
+@if (showForm()) {
+  <form class="border rounded p-3 mb-3 bg-light" [formGroup]="experienceForm" (ngSubmit)="save()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="experience-position" class="form-label small fw-semibold mb-1">Cargo</label>
+        <input
+          id="experience-position"
+          class="form-control"
+          maxlength="100"
+          formControlName="position"
+          [class.is-invalid]="isInvalid('position')"
+        />
+        <div class="invalid-feedback">Escribe el cargo (2 a 100 caracteres).</div>
+      </div>
+      <div class="col-md-6">
+        <label for="experience-company" class="form-label small fw-semibold mb-1">Empresa</label>
+        <input
+          id="experience-company"
+          class="form-control"
+          maxlength="150"
+          formControlName="company"
+          [class.is-invalid]="isInvalid('company')"
+        />
+        <div class="invalid-feedback">Escribe la empresa (2 a 150 caracteres).</div>
+      </div>
+      <div class="col-md-4">
+        <label for="experience-location" class="form-label small fw-semibold mb-1"
+          >Lugar (opcional)</label
+        >
+        <input
+          id="experience-location"
+          class="form-control"
+          maxlength="100"
+          formControlName="location"
+        />
+      </div>
+      <div class="col-md-4">
+        <label for="experience-start" class="form-label small fw-semibold mb-1"
+          >Fecha de inicio</label
+        >
+        <input
+          id="experience-start"
+          type="date"
+          class="form-control"
+          [max]="today"
+          formControlName="startDate"
+          [class.is-invalid]="isInvalid('startDate')"
+        />
+        <div class="invalid-feedback">Indica la fecha de inicio.</div>
+      </div>
+      <div class="col-md-4">
+        <label for="experience-end" class="form-label small fw-semibold mb-1">Fecha de fin</label>
+        <input
+          id="experience-end"
+          type="date"
+          class="form-control"
+          [max]="today"
+          formControlName="endDate"
+          [attr.disabled]="experienceForm.controls.currentJob.value ? true : null"
+        />
+        <div class="form-check mt-1">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="experience-current"
+            formControlName="currentJob"
+          />
+          <label class="form-check-label small" for="experience-current"
+            >Trabajo aquí actualmente</label
+          >
+        </div>
+      </div>
+      @if (datesError()) {
+        <div class="col-12">
+          <div class="text-danger small">{{ datesError() }}</div>
+        </div>
+      }
+      <div class="col-12">
+        <label for="experience-description" class="form-label small fw-semibold mb-1"
+          >Descripción de tus tareas (opcional)</label
+        >
+        <textarea
+          id="experience-description"
+          class="form-control"
+          rows="3"
+          maxlength="2000"
+          formControlName="description"
+        ></textarea>
+      </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="sending()">Guardar</button>
+    </div>
+  </form>
+}
+
+@if (experiences().length === 0 && !showForm()) {
+  <div class="text-center text-secondary py-4">
+    <i class="bi bi-briefcase fs-2 d-block mb-2"></i>
+    Aún no agregaste tu experiencia. Suma 15 % a tu perfil.
+  </div>
+}
+@for (experience of experiences(); track experience.id) {
+  <div class="border rounded p-3 mb-2 d-flex gap-3 align-items-start">
+    <i class="bi bi-briefcase fs-3 text-guinda"></i>
+    <div class="flex-grow-1" style="min-width: 0">
+      <div class="d-flex flex-wrap justify-content-between gap-2">
+        <div class="fw-semibold">{{ experience.position }}</div>
+        <div class="small text-secondary">{{ period(experience) }}</div>
+      </div>
+      <div class="small text-secondary">
+        {{ experience.company }}
+        @if (experience.location) {
+          · {{ experience.location }}
+        }
+      </div>
+      @if (experience.description) {
+        <p class="small mb-0 mt-1 texto-largo">{{ experience.description }}</p>
+      }
+    </div>
+    <div class="d-flex flex-column gap-1">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [attr.aria-label]="'Editar ' + experience.position"
+        (click)="startEdit(experience)"
+      >
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger"
+        [attr.aria-label]="'Eliminar ' + experience.position"
+        (click)="remove(experience)"
+      >
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  </div>
+}

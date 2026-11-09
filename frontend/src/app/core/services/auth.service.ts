@@ -62,6 +62,13 @@ export class AuthService {
     });
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<MessageResponse> {
+    return this.http.patch<MessageResponse>(`${this.url}/change-password`, {
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    });
+  }
+
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
   }

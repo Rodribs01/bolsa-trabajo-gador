@@ -40,16 +40,55 @@
             >Ofertas</a
           >
         </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/" fragment="como" (click)="closeMenu()"
-            >¿Cómo funciona?</a
-          >
-        </li>
+        @if (authService.hasRole('POSTULANTE')) {
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/applicant/applications"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Mis postulaciones</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/applicant/favorites"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Favoritos</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/applicant/profile"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Mi perfil</a
+            >
+          </li>
+        } @else if (!authService.currentUser()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/" fragment="como" (click)="closeMenu()"
+              >¿Cómo funciona?</a
+            >
+          </li>
+        }
       </ul>
       @if (authService.currentUser(); as user) {
         <div class="d-flex flex-wrap align-items-center gap-2 pb-2 pb-lg-0">
           <a class="btn btn-outline-light" [routerLink]="panelUrl()" (click)="closeMenu()">
             <i class="bi bi-person-circle me-1"></i> {{ user.name }}
+          </a>
+          <a
+            class="btn btn-outline-light"
+            routerLink="/change-password"
+            title="Cambiar contraseña"
+            aria-label="Cambiar contraseña"
+            (click)="closeMenu()"
+          >
+            <i class="bi bi-key"></i>
           </a>
           <button type="button" class="btn btn-ocre" (click)="logout()">
             <i class="bi bi-box-arrow-right me-1"></i> Salir

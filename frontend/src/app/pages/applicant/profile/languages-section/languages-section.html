@@ -1,0 +1,75 @@
+<h2 class="h5 fw-bold mb-3">Idiomas</h2>
+
+@if (errorMessage()) {
+  <div class="alert alert-danger small">{{ errorMessage() }}</div>
+}
+
+<form class="row g-2 align-items-end mb-4" [formGroup]="languageForm" (ngSubmit)="add()">
+  <div class="col-md-6">
+    <label for="language-option" class="form-label small fw-semibold mb-1">Idioma</label>
+    <select
+      id="language-option"
+      class="form-select"
+      formControlName="languageId"
+      [class.is-invalid]="
+        languageForm.controls.languageId.touched && languageForm.controls.languageId.invalid
+      "
+    >
+      <option value="">Selecciona un idioma</option>
+      @for (option of availableOptions(); track option.id) {
+        <option [value]="option.id">{{ option.name }}</option>
+      }
+    </select>
+    <div class="invalid-feedback">Selecciona un idioma.</div>
+  </div>
+  <div class="col-md-3">
+    <label for="language-level" class="form-label small fw-semibold mb-1">Nivel</label>
+    <select id="language-level" class="form-select" formControlName="level">
+      @for (level of levels; track level) {
+        <option [value]="level">{{ label(level) }}</option>
+      }
+    </select>
+  </div>
+  <div class="col-md-3 d-grid">
+    <button type="submit" class="btn btn-ocre" [disabled]="sending()">
+      <i class="bi bi-plus-lg me-1"></i> Agregar
+    </button>
+  </div>
+</form>
+
+@if (languages().length === 0) {
+  <div class="text-center text-secondary py-3">
+    <i class="bi bi-translate fs-2 d-block mb-2"></i>
+    Aún no agregaste idiomas. Suma 5 % a tu perfil.
+  </div>
+}
+<ul class="list-group">
+  @for (language of languages(); track language.id) {
+    <li class="list-group-item d-flex flex-wrap align-items-center gap-2">
+      <span class="fw-semibold me-auto">{{ language.name }}</span>
+      <label class="visually-hidden" [for]="'language-level-' + language.id"
+        >Nivel de {{ language.name }}</label
+      >
+      <select
+        class="form-select form-select-sm"
+        style="width: 140px"
+        [id]="'language-level-' + language.id"
+        (change)="changeLevel(language, $event)"
+      >
+        @for (level of levels; track level) {
+          <option [value]="level" [selected]="level === language.level">
+            {{ label(level) }}
+          </option>
+        }
+      </select>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger"
+        [attr.aria-label]="'Quitar ' + language.name"
+        (click)="remove(language)"
+      >
+        <i class="bi bi-trash"></i>
+      </button>
+    </li>
+  }
+</ul>

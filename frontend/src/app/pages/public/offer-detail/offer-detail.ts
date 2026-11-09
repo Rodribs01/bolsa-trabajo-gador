@@ -1,25 +1,42 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ApplicantProfile } from '../../../core/models/applicant.model';
 import { JobOfferDetail, OfferSkill } from '../../../core/models/job-offer.model';
+import { ApplicantService } from '../../../core/services/applicant.service';
+import { ApplicationService } from '../../../core/services/application.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { FavoriteService } from '../../../core/services/favorite.service';
 import { JobOfferService } from '../../../core/services/job-offer.service';
 import { getErrorMessage } from '../../../core/utils/error-message';
 import { daysUntil, formatDate, formatSalary } from '../../../core/utils/format';
+import { canApply } from '../../../core/utils/profile-completion';
+import { applicationStatusClass, statusLabel } from '../../../core/utils/status';
+import { ApplyModal } from '../../../shared/apply-modal/apply-modal';
 import { CompanyLogo } from '../../../shared/company-logo/company-logo';
 
 @Component({
   selector: 'app-offer-detail',
-  imports: [RouterLink, CompanyLogo],
+  imports: [RouterLink, CompanyLogo, ApplyModal],
   templateUrl: './offer-detail.html',
 })
 export class OfferDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private jobOfferService = inject(JobOfferService);
+  private applicantService = inject(ApplicantService);
+  private applicationService = inject(ApplicationService);
+  private favoriteService = inject(FavoriteService);
   authService = inject(AuthService);
 
   offer = signal<JobOfferDetail | null>(null);
   loading = signal(true);
   errorMessage = signal('');
+  profile = signal<ApplicantProfile | null>(null);
+  profileError = signal(false);
+  myApplicationStatus = signal('');
+  isFavorite = signal(false);
+  savingFavorite = signal(false);
+  favoriteError = signal('');
+  showApplyModal = signal(false);
   currentUrl = '';
 
   ngOnInit(): void {
@@ -36,6 +53,53 @@ export class OfferDetail implements OnInit {
         this.loading.set(false);
       },
     });
+
+    if (this.authService.hasRole('POSTULANTE')) {
+      this.loadApplicantData(id);
+    }
+  }
+
+  loadMyApplication(offerId: number): void {
+    this.applicationService.findMine().subscribe({
+      next: (page) => {
+        for (const application of page.items) {
+          if (application.offer.id === offerId) {
+            this.myApplicationStatus.set(application.status);
+          }
+        }
+      },
+    });
+  }
+
+  toggleFavorite(offer: JobOfferDetail): void {
+    const request = this.isFavorite()
+      ? this.favoriteService.remove(offer.id)
+      : this.favoriteService.add(offer.id);
+
+    this.savingFavorite.set(true);
+    this.favoriteError.set('');
+    request.subscribe({
+      next: () => {
+        this.savingFavorite.set(false);
+        this.isFavorite.set(!this.isFavorite());
+      },
+      error: (error) => {
+        this.savingFavorite.set(false);
+        this.favoriteError.set(getErrorMessage(error));
+      },
+    });
+  }
+
+  canApply(profile: ApplicantProfile): boolean {
+    return canApply(profile);
+  }
+
+  statusLabel(status: string): string {
+    return statusLabel(status);
+  }
+
+  statusClass(status: string): string {
+    return applicationStatusClass(status);
   }
 
   salary(offer: JobOfferDetail): string {
@@ -76,5 +140,22 @@ export class OfferDetail implements OnInit {
       }
     }
     return result;
+  }
+
+  private loadApplicantData(offerId: number): void {
+    this.applicantService.getProfile().subscribe({
+      next: (profile) => this.profile.set(profile),
+      error: () => this.profileError.set(true),
+    });
+    this.loadMyApplication(offerId);
+    this.favoriteService.findMine().subscribe({
+      next: (page) => {
+        for (const favorite of page.items) {
+          if (favorite.offer.id === offerId) {
+            this.isFavorite.set(true);
+          }
+        }
+      },
+    });
   }
 }

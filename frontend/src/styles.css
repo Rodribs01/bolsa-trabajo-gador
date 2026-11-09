@@ -343,3 +343,100 @@ img.emp-logo {
   background: #fff;
   cursor: pointer;
 }
+
+.st-postulado {
+  background: #6c757d;
+  color: #fff;
+}
+
+.st-visto {
+  background: #8fdcf0;
+  color: #06323d;
+}
+
+.st-preseleccionado {
+  background: #1f4fa8;
+  color: #fff;
+}
+
+.st-entrevista {
+  background: #6f42c1;
+  color: #fff;
+}
+
+.st-finalista {
+  background: #9c5a1a;
+  color: #fff;
+}
+
+.st-contratado {
+  background: #198754;
+  color: #fff;
+}
+
+.st-rechazado {
+  background: #c62828;
+  color: #fff;
+}
+
+.st-retirado {
+  background: #e2e3e5;
+  color: #41464b;
+}
+
+.foto-perfil {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1d9a8;
+  color: #5a0b0e;
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.linea-tiempo li {
+  position: relative;
+  padding-left: 32px;
+  padding-bottom: 14px;
+}
+
+.linea-tiempo li::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 22px;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+
+.linea-tiempo li:last-child::before {
+  display: none;
+}
+
+.linea-tiempo .punto {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #dee2e6;
+  color: #fff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.linea-tiempo .punto.hecho {
+  background: #198754;
+}
+
+.primera-mayuscula::first-letter {
+  text-transform: uppercase;
+}

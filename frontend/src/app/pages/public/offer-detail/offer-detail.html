@@ -43,8 +43,24 @@
             · Rubro: {{ offer.company.sector }}
           </div>
         </div>
+        @if (authService.hasRole('POSTULANTE')) {
+          <button
+            type="button"
+            class="btn"
+            [class.btn-primary]="isFavorite()"
+            [class.btn-outline-primary]="!isFavorite()"
+            [disabled]="savingFavorite()"
+            (click)="toggleFavorite(offer)"
+          >
+            <i class="bi me-1" [class]="isFavorite() ? 'bi-heart-fill' : 'bi-heart'"></i>
+            {{ isFavorite() ? 'Guardada' : 'Guardar' }}
+          </button>
+        }
       </div>
     </div>
+    @if (favoriteError()) {
+      <div class="alert alert-danger small">{{ favoriteError() }}</div>
+    }
 
     <div class="datos-clave mb-4">
       <div>
@@ -182,6 +198,48 @@
                 <i class="bi bi-info-circle me-1"></i> Solo los postulantes pueden postular a las
                 ofertas.
               </p>
+            } @else if (profileError()) {
+              <div class="alert alert-danger small mb-0">
+                No pudimos cargar tu perfil. Recarga la página para postular.
+              </div>
+            } @else if (profile(); as profile) {
+              <div class="d-flex justify-content-between small mb-1">
+                <span class="fw-semibold">Tu perfil</span>
+                <span class="fw-bold">{{ profile.completionPercentage }} %</span>
+              </div>
+              <div
+                class="progress mb-3"
+                role="progressbar"
+                aria-label="Perfil completado"
+                [attr.aria-valuenow]="profile.completionPercentage"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="height: 8px"
+              >
+                <div
+                  class="progress-bar"
+                  [class.bg-success]="canApply(profile)"
+                  [class.bg-warning]="!canApply(profile)"
+                  [style.width.%]="profile.completionPercentage"
+                ></div>
+              </div>
+              @if (myApplicationStatus(); as status) {
+                <div class="alert alert-success small mb-2">
+                  <i class="bi bi-check-circle-fill me-1"></i> Ya postulaste a esta oferta. Estado:
+                  <span class="badge" [class]="statusClass(status)">{{ statusLabel(status) }}</span>
+                </div>
+                <a routerLink="/applicant/applications" class="btn btn-outline-primary w-100">
+                  Ver mis postulaciones
+                </a>
+              } @else {
+                <button
+                  type="button"
+                  class="btn btn-primary btn-lg w-100 py-3"
+                  (click)="showApplyModal.set(true)"
+                >
+                  <i class="bi bi-send me-1"></i> Postular
+                </button>
+              }
             }
             <p class="small text-secondary text-center mt-3 mb-0">
               <i class="bi bi-hourglass-split me-1"></i> {{ daysLeft(offer) }}
@@ -212,5 +270,14 @@
         </div>
       </aside>
     </div>
+
+    @if (showApplyModal() && profile(); as profile) {
+      <app-apply-modal
+        [offer]="offer"
+        [profile]="profile"
+        (closed)="showApplyModal.set(false)"
+        (applied)="loadMyApplication(offer.id)"
+      />
+    }
   }
 </div>

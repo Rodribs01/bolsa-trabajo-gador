@@ -1,0 +1,74 @@
+<h2 class="h5 fw-bold mb-1">Habilidades</h2>
+<p class="small text-secondary mb-3">
+  Las empresas ven cuántas de tus habilidades coinciden con las que pide cada oferta.
+</p>
+
+@if (errorMessage()) {
+  <div class="alert alert-danger small">{{ errorMessage() }}</div>
+}
+
+<form class="row g-2 align-items-end mb-4" [formGroup]="skillForm" (ngSubmit)="add()">
+  <div class="col-md-6">
+    <label for="skill-option" class="form-label small fw-semibold mb-1">Habilidad</label>
+    <select
+      id="skill-option"
+      class="form-select"
+      formControlName="skillId"
+      [class.is-invalid]="skillForm.controls.skillId.touched && skillForm.controls.skillId.invalid"
+    >
+      <option value="">Selecciona una habilidad</option>
+      @for (option of availableOptions(); track option.id) {
+        <option [value]="option.id">{{ option.name }} ({{ option.category }})</option>
+      }
+    </select>
+    <div class="invalid-feedback">Selecciona una habilidad.</div>
+  </div>
+  <div class="col-md-3">
+    <label for="skill-level" class="form-label small fw-semibold mb-1">Nivel</label>
+    <select id="skill-level" class="form-select" formControlName="level">
+      @for (level of levels; track level) {
+        <option [value]="level">{{ label(level) }}</option>
+      }
+    </select>
+  </div>
+  <div class="col-md-3 d-grid">
+    <button type="submit" class="btn btn-ocre" [disabled]="sending()">
+      <i class="bi bi-plus-lg me-1"></i> Agregar
+    </button>
+  </div>
+</form>
+
+@if (skills().length === 0) {
+  <div class="text-center text-secondary py-3">
+    <i class="bi bi-stars fs-2 d-block mb-2"></i>
+    Aún no agregaste habilidades. Suma 15 % a tu perfil.
+  </div>
+}
+<ul class="list-group">
+  @for (skill of skills(); track skill.id) {
+    <li class="list-group-item d-flex flex-wrap align-items-center gap-2">
+      <span class="badge skill fs-6 me-auto">{{ skill.name }}</span>
+      <label class="visually-hidden" [for]="'skill-level-' + skill.id"
+        >Nivel de {{ skill.name }}</label
+      >
+      <select
+        class="form-select form-select-sm"
+        style="width: 140px"
+        [id]="'skill-level-' + skill.id"
+        (change)="changeLevel(skill, $event)"
+      >
+        @for (level of levels; track level) {
+          <option [value]="level" [selected]="level === skill.level">{{ label(level) }}</option>
+        }
+      </select>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger"
+        [attr.aria-label]="'Quitar ' + skill.name"
+        (click)="remove(skill)"
+      >
+        <i class="bi bi-trash"></i>
+      </button>
+    </li>
+  }
+</ul>

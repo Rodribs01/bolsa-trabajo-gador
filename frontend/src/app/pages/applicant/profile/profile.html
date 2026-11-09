@@ -1,0 +1,97 @@
+@if (loading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-secondary" role="status">
+      <span class="visually-hidden">Cargando tu perfil</span>
+    </div>
+  </div>
+} @else if (errorMessage()) {
+  <div class="container py-4">
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+  </div>
+} @else if (profile(); as profile) {
+  <div class="bg-white border-bottom">
+    <div class="container py-3 d-flex flex-wrap align-items-center gap-3">
+      <h1 class="h5 fw-bold mb-0">Mi perfil</h1>
+      <div class="flex-grow-1" style="min-width: 220px">
+        <div class="d-flex justify-content-between small">
+          <span class="text-secondary"
+            >Completitud · necesitas más del {{ threshold }} % y tu CV para postular</span
+          >
+          <span
+            class="fw-bold"
+            [class.text-success]="canApply(profile)"
+            [class.text-ocre]="!canApply(profile)"
+            >{{ profile.completionPercentage }} %</span
+          >
+        </div>
+        <div
+          class="progress"
+          role="progressbar"
+          aria-label="Perfil completado"
+          [attr.aria-valuenow]="profile.completionPercentage"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          style="height: 8px"
+        >
+          <div
+            class="progress-bar"
+            [class.bg-success]="canApply(profile)"
+            [class.bg-warning]="!canApply(profile)"
+            [style.width.%]="profile.completionPercentage"
+          ></div>
+        </div>
+      </div>
+      <a routerLink="/job-offers" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-search me-1"></i> Buscar ofertas
+      </a>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <ul class="nav nav-tabs flex-nowrap overflow-auto" role="tablist">
+      @for (tab of tabs; track tab.key) {
+        <li class="nav-item" role="presentation">
+          <button
+            type="button"
+            role="tab"
+            class="nav-link text-nowrap"
+            [class.active]="activeTab() === tab.key"
+            [attr.aria-selected]="activeTab() === tab.key"
+            (click)="activeTab.set(tab.key)"
+          >
+            @if (isComplete(profile, tab.key)) {
+              <i class="bi bi-check-circle-fill text-success me-1"></i>
+            } @else {
+              <i class="bi bi-exclamation-circle text-danger me-1"></i>
+            }
+            {{ tab.label }}
+          </button>
+        </li>
+      }
+    </ul>
+    <div class="card border-top-0 rounded-top-0">
+      <div class="card-body p-4">
+        @switch (activeTab()) {
+          @case ('education') {
+            <app-education-section [educations]="profile.educations" (saved)="loadProfile()" />
+          }
+          @case ('experience') {
+            <app-experience-section [experiences]="profile.experiences" (saved)="loadProfile()" />
+          }
+          @case ('skills') {
+            <app-skills-section [skills]="profile.skills" (saved)="loadProfile()" />
+          }
+          @case ('languages') {
+            <app-languages-section [languages]="profile.languages" (saved)="loadProfile()" />
+          }
+          @case ('cv') {
+            <app-cv-section [hasCv]="profile.hasCv" (saved)="loadProfile()" />
+          }
+          @default {
+            <app-personal-data [profile]="profile" (saved)="loadProfile()" />
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

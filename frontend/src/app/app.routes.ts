@@ -1,4 +1,10 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from './core/guards/role.guard';
+import { ChangePassword } from './pages/account/change-password/change-password';
+import { Applications } from './pages/applicant/applications/applications';
+import { Dashboard as ApplicantDashboard } from './pages/applicant/dashboard/dashboard';
+import { Favorites } from './pages/applicant/favorites/favorites';
+import { Profile as ApplicantProfile } from './pages/applicant/profile/profile';
 import { CompanyRequestSent } from './pages/public/company-request-sent/company-request-sent';
 import { ForgotPassword } from './pages/public/forgot-password/forgot-password';
 import { Home } from './pages/public/home/home';
@@ -21,5 +27,23 @@ export const routes: Routes = [
   { path: 'verify-email', component: VerifyEmail, title: 'Verifica tu correo' },
   { path: 'forgot-password', component: ForgotPassword, title: 'Recuperar contraseña' },
   { path: 'reset-password', component: ResetPassword, title: 'Nueva contraseña' },
+  {
+    path: 'applicant',
+    canActivate: [roleGuard],
+    data: { roles: ['POSTULANTE'] },
+    children: [
+      { path: '', component: ApplicantDashboard, title: 'Mi panel' },
+      { path: 'profile', component: ApplicantProfile, title: 'Mi perfil' },
+      { path: 'applications', component: Applications, title: 'Mis postulaciones' },
+      { path: 'favorites', component: Favorites, title: 'Favoritos' },
+    ],
+  },
+  {
+    path: 'change-password',
+    component: ChangePassword,
+    canActivate: [roleGuard],
+    data: { roles: ['POSTULANTE', 'EMPRESA', 'SUPERADMIN'] },
+    title: 'Cambiar contraseña',
+  },
   { path: '**', redirectTo: '' },
 ];
