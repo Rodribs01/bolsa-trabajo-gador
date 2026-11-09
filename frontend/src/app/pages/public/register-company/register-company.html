@@ -1,0 +1,365 @@
+<div class="container py-4">
+  <div class="row g-4">
+    <aside class="col-lg-3">
+      <h1 class="h4 fw-bold mb-1">Registro de empresa</h1>
+      <p class="small text-secondary">
+        La Gobernación revisa cada solicitud antes de que puedas publicar ofertas.
+      </p>
+      <div class="alert alert-light border small d-flex gap-2">
+        <i class="bi bi-clock-history text-ocre"></i>
+        <div>
+          Mientras tu empresa esté pendiente podrás iniciar sesión, pero no publicar ofertas.
+        </div>
+      </div>
+      <p class="small text-secondary mb-0">
+        ¿Ya registraste tu empresa? <a routerLink="/login" class="fw-semibold">Inicia sesión</a>
+      </p>
+    </aside>
+
+    <div class="col-lg-9">
+      @if (errorMessage()) {
+        <div class="alert alert-danger">{{ errorMessage() }}</div>
+      }
+      <form
+        class="d-flex flex-column gap-3"
+        [formGroup]="companyForm"
+        (ngSubmit)="submit()"
+        novalidate
+      >
+        <section class="card">
+          <div class="card-body p-4">
+            <h2 class="h5 fw-bold mb-3">
+              <span class="paso-num ocre me-2">1</span>Datos de la empresa
+            </h2>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="company-nit" class="form-label small fw-semibold mb-1">NIT</label>
+                <input
+                  id="company-nit"
+                  class="form-control"
+                  inputmode="numeric"
+                  maxlength="20"
+                  formControlName="nit"
+                  [class.is-invalid]="isInvalid('nit')"
+                />
+                <div class="invalid-feedback">El NIT debe tener de 5 a 20 dígitos.</div>
+              </div>
+              <div class="col-md-8">
+                <label for="company-name" class="form-label small fw-semibold mb-1"
+                  >Razón social</label
+                >
+                <input
+                  id="company-name"
+                  class="form-control"
+                  maxlength="150"
+                  formControlName="businessName"
+                  [class.is-invalid]="isInvalid('businessName')"
+                />
+                <div class="invalid-feedback">Escribe la razón social.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="company-sector" class="form-label small fw-semibold mb-1">Rubro</label>
+                <select
+                  id="company-sector"
+                  class="form-select"
+                  formControlName="sectorId"
+                  [class.is-invalid]="isInvalid('sectorId')"
+                >
+                  <option value="">Selecciona un rubro</option>
+                  @for (sector of sectors(); track sector.id) {
+                    <option [value]="sector.id">{{ sector.name }}</option>
+                  }
+                </select>
+                <div class="invalid-feedback">Selecciona un rubro.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="company-logo" class="form-label small fw-semibold mb-1"
+                  >Logo (opcional)</label
+                >
+                <input
+                  #logoInput
+                  id="company-logo"
+                  type="file"
+                  class="form-control"
+                  accept="image/png,image/jpeg"
+                  [class.is-invalid]="logoError()"
+                  (change)="onLogoSelected($event)"
+                />
+                @if (logoError()) {
+                  <div class="invalid-feedback">{{ logoError() }}</div>
+                } @else if (logo(); as file) {
+                  <div class="form-text d-flex justify-content-between">
+                    <span>{{ file.name }} · {{ fileSize(file) }}</span>
+                    <button
+                      type="button"
+                      class="btn btn-link btn-sm p-0"
+                      (click)="removeLogo(logoInput)"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                } @else {
+                  <div class="form-text">PNG o JPG, máximo 2 MB.</div>
+                }
+              </div>
+              <div class="col-12">
+                <label for="company-description" class="form-label small fw-semibold mb-1"
+                  >Descripción</label
+                >
+                <textarea
+                  id="company-description"
+                  class="form-control"
+                  rows="3"
+                  maxlength="500"
+                  formControlName="description"
+                  [class.is-invalid]="isInvalid('description')"
+                ></textarea>
+                <div class="invalid-feedback">Describe tu empresa en 10 a 500 caracteres.</div>
+                <div class="form-text text-end">
+                  {{ companyForm.controls.description.value.length }} / 500
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body p-4">
+            <h2 class="h5 fw-bold mb-3">
+              <span class="paso-num ocre me-2">2</span>Representante legal
+            </h2>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="company-representative" class="form-label small fw-semibold mb-1"
+                  >Nombre completo</label
+                >
+                <input
+                  id="company-representative"
+                  class="form-control"
+                  maxlength="150"
+                  formControlName="legalRepresentative"
+                  [class.is-invalid]="isInvalid('legalRepresentative')"
+                />
+                <div class="invalid-feedback">Escribe el nombre del representante legal.</div>
+              </div>
+              <div class="col-md-3">
+                <label for="company-representative-ci" class="form-label small fw-semibold mb-1"
+                  >CI</label
+                >
+                <input
+                  id="company-representative-ci"
+                  class="form-control"
+                  maxlength="13"
+                  formControlName="representativeCi"
+                  [class.is-invalid]="isInvalid('representativeCi')"
+                />
+                <div class="invalid-feedback">El CI no es válido.</div>
+              </div>
+              <div class="col-md-3">
+                <label for="company-phone" class="form-label small fw-semibold mb-1">Celular</label>
+                <input
+                  id="company-phone"
+                  class="form-control"
+                  inputmode="numeric"
+                  maxlength="8"
+                  formControlName="phone"
+                  [class.is-invalid]="isInvalid('phone')"
+                />
+                <div class="invalid-feedback">
+                  El celular debe tener 8 dígitos y empezar con 6 o 7.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body p-4">
+            <h2 class="h5 fw-bold mb-3"><span class="paso-num ocre me-2">3</span>Contacto</h2>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="company-email" class="form-label small fw-semibold mb-1"
+                  >Correo corporativo</label
+                >
+                <input
+                  id="company-email"
+                  type="email"
+                  class="form-control"
+                  maxlength="150"
+                  autocomplete="email"
+                  formControlName="email"
+                  [class.is-invalid]="isInvalid('email')"
+                />
+                <div class="invalid-feedback">Escribe un correo válido.</div>
+                <div class="form-text">Con este correo iniciarás sesión.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="company-municipality" class="form-label small fw-semibold mb-1"
+                  >Municipio</label
+                >
+                <select
+                  id="company-municipality"
+                  class="form-select"
+                  formControlName="municipalityId"
+                  [class.is-invalid]="isInvalid('municipalityId')"
+                >
+                  <option value="">Selecciona un municipio</option>
+                  @for (municipality of municipalities(); track municipality.id) {
+                    <option [value]="municipality.id">{{ municipality.name }}</option>
+                  }
+                </select>
+                <div class="invalid-feedback">Selecciona un municipio.</div>
+              </div>
+              <div class="col-12">
+                <label for="company-address" class="form-label small fw-semibold mb-1"
+                  >Dirección</label
+                >
+                <input
+                  id="company-address"
+                  class="form-control"
+                  maxlength="200"
+                  placeholder="Calle, número y zona"
+                  formControlName="address"
+                  [class.is-invalid]="isInvalid('address')"
+                />
+                <div class="invalid-feedback">Escribe la dirección (al menos 5 caracteres).</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body p-4">
+            <h2 class="h5 fw-bold mb-1">
+              <span class="paso-num ocre me-2">4</span>Documento de respaldo
+            </h2>
+            <p class="small text-secondary mb-3">
+              NIT, matrícula de comercio o testimonio de constitución. Un solo PDF, máximo 5 MB.
+            </p>
+            <input
+              #documentInput
+              id="company-document"
+              type="file"
+              class="d-none"
+              accept="application/pdf"
+              (change)="onDocumentSelected($event)"
+            />
+            @if (document(); as file) {
+              <div class="d-flex align-items-center gap-3 border rounded p-3 bg-white">
+                <i class="bi bi-file-earmark-pdf-fill fs-3 text-danger"></i>
+                <div class="flex-grow-1 small">
+                  <div class="fw-semibold text-break">{{ file.name }}</div>
+                  <div class="text-secondary">{{ fileSize(file) }}</div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  aria-label="Quitar archivo"
+                  (click)="removeDocument(documentInput)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            } @else {
+              <label for="company-document" class="d-block text-center p-4 mb-0 zona-archivo">
+                <i class="bi bi-file-earmark-arrow-up fs-2 text-ocre"></i>
+                <div class="fw-semibold mt-1">
+                  <span class="text-guinda text-decoration-underline">Elige un archivo PDF</span>
+                </div>
+                <div class="small text-secondary">Solo .pdf · máx. 5 MB</div>
+              </label>
+            }
+            @if (documentError()) {
+              <div class="text-danger small mt-2">{{ documentError() }}</div>
+            }
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body p-4">
+            <h2 class="h5 fw-bold mb-3"><span class="paso-num ocre me-2">5</span>Cuenta</h2>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="company-password" class="form-label small fw-semibold mb-1"
+                  >Contraseña</label
+                >
+                <div class="input-group">
+                  <input
+                    id="company-password"
+                    [type]="showPassword() ? 'text' : 'password'"
+                    class="form-control"
+                    autocomplete="new-password"
+                    formControlName="password"
+                    [class.is-invalid]="isInvalid('password')"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                    (click)="showPassword.set(!showPassword())"
+                  >
+                    <i class="bi" [class]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
+                </div>
+                <app-password-rules [password]="companyForm.controls.password.value" />
+              </div>
+              <div class="col-md-6">
+                <label for="company-confirm" class="form-label small fw-semibold mb-1"
+                  >Confirmar contraseña</label
+                >
+                <input
+                  id="company-confirm"
+                  type="password"
+                  class="form-control"
+                  autocomplete="new-password"
+                  formControlName="confirmPassword"
+                  [class.is-invalid]="isInvalid('confirmPassword') || passwordsDiffer()"
+                />
+                <div class="invalid-feedback">
+                  @if (companyForm.controls.confirmPassword.hasError('required')) {
+                    Confirma tu contraseña.
+                  } @else {
+                    Las contraseñas no coinciden.
+                  }
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="company-declaration"
+                    formControlName="declaration"
+                    [class.is-invalid]="isInvalid('declaration')"
+                  />
+                  <label class="form-check-label small" for="company-declaration">
+                    Declaro que los datos son verídicos y que el documento de respaldo pertenece a
+                    la empresa.
+                  </label>
+                  <div class="invalid-feedback">Debes aceptar la declaración para continuar.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        @if (submitted() && companyForm.invalid) {
+          <div class="alert alert-warning small mb-0">
+            Revisa los campos marcados en rojo antes de enviar.
+          </div>
+        }
+        <div class="d-flex flex-wrap justify-content-end gap-2">
+          <a routerLink="/" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+          <button type="submit" class="btn btn-ocre btn-lg" [disabled]="sending()">
+            @if (sending()) {
+              <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+            } @else {
+              <i class="bi bi-send me-1"></i>
+            }
+            Enviar solicitud
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

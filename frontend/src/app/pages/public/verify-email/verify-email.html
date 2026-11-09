@@ -1,0 +1,177 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-5">
+      <h1 class="h4 fw-bold mb-3">Registro de postulante</h1>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="paso-num bg-success"><i class="bi bi-check"></i></span>
+        <span class="small text-secondary">Tus datos</span>
+        <div class="flex-grow-1 border-top"></div>
+        <span class="paso-num">2</span><span class="fw-semibold small">Verificar correo</span>
+      </div>
+      <div class="progress mb-4" role="progressbar" aria-label="Paso 2 de 2" style="height: 4px">
+        <div class="progress-bar bg-primary" style="width: 100%"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-body p-4 text-center">
+          <span class="gd-icono bg-guinda-50 text-guinda mb-3"><i class="bi bi-envelope"></i></span>
+          <h2 class="h5 fw-bold">Verifica tu correo</h2>
+
+          @if (!email()) {
+            <p class="small text-secondary mb-3">
+              Escribe el correo con el que te registraste para ingresar el código.
+            </p>
+            <form class="text-start" [formGroup]="emailForm" (ngSubmit)="useEmail()">
+              <label for="verify-email" class="form-label small fw-semibold mb-1"
+                >Correo electrónico</label
+              >
+              <input
+                id="verify-email"
+                type="email"
+                class="form-control"
+                formControlName="email"
+                [class.is-invalid]="
+                  emailForm.controls.email.touched && emailForm.controls.email.invalid
+                "
+              />
+              <div class="invalid-feedback mb-3">Escribe un correo válido.</div>
+              <button type="submit" class="btn btn-primary w-100">Continuar</button>
+            </form>
+          } @else {
+            <p class="small text-secondary mb-4">
+              Ingresa el código de 6 dígitos que enviamos a
+              <strong class="text-body">{{ email() }}</strong
+              >. Si no lo ves, revisa Promociones o Spam; si ya venció, pide uno nuevo.
+            </p>
+
+            @if (infoMessage()) {
+              <div class="alert alert-success py-2 small">{{ infoMessage() }}</div>
+            }
+            @if (errorMessage()) {
+              <div class="alert alert-danger py-2 small d-flex gap-2 text-start">
+                <i class="bi bi-x-circle-fill"></i> {{ errorMessage() }}
+              </div>
+            }
+
+            <form [formGroup]="codeForm" (ngSubmit)="verify()">
+              <label for="verify-code" class="visually-hidden">Código de verificación</label>
+              <input
+                id="verify-code"
+                class="form-control form-control-lg otp mx-auto mb-1"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                placeholder="000000"
+                formControlName="code"
+                [class.is-invalid]="
+                  codeForm.controls.code.touched && codeForm.controls.code.invalid
+                "
+              />
+              <div
+                class="invalid-feedback d-block mb-2"
+                [class.invisible]="
+                  !(codeForm.controls.code.touched && codeForm.controls.code.invalid)
+                "
+              >
+                El código tiene 6 dígitos.
+              </div>
+              <button
+                type="submit"
+                class="btn btn-primary btn-lg w-100 mb-3"
+                [disabled]="sending()"
+              >
+                Verificar correo
+              </button>
+            </form>
+
+            <div class="small text-secondary">
+              ¿No te llegó?
+              @if (secondsLeft() > 0) {
+                <span
+                  >Podrás pedir otro código en <strong>{{ secondsLeft() }} s</strong></span
+                >
+              } @else {
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm fw-semibold p-0 align-baseline text-decoration-none"
+                  (click)="resend()"
+                >
+                  <i class="bi bi-arrow-repeat"></i> Reenviar código
+                </button>
+              }
+            </div>
+            <button
+              type="button"
+              class="btn btn-link btn-sm mt-2"
+              (click)="showChangeEmail.set(!showChangeEmail())"
+            >
+              ¿Escribiste mal tu correo? Cambiar correo
+            </button>
+
+            @if (showChangeEmail()) {
+              <form
+                class="text-start border-top pt-3 mt-2"
+                [formGroup]="changeEmailForm"
+                (ngSubmit)="changeEmail()"
+              >
+                <div class="mb-2">
+                  <label for="change-new-email" class="form-label small fw-semibold mb-1"
+                    >Correo correcto</label
+                  >
+                  <input
+                    id="change-new-email"
+                    type="email"
+                    class="form-control"
+                    formControlName="newEmail"
+                    [class.is-invalid]="
+                      changeEmailForm.controls.newEmail.touched &&
+                      changeEmailForm.controls.newEmail.invalid
+                    "
+                  />
+                  <div class="invalid-feedback">Escribe un correo válido.</div>
+                </div>
+                <div class="mb-3">
+                  <label for="change-password" class="form-label small fw-semibold mb-1"
+                    >Contraseña que elegiste al registrarte</label
+                  >
+                  <input
+                    id="change-password"
+                    type="password"
+                    class="form-control"
+                    autocomplete="current-password"
+                    formControlName="password"
+                    [class.is-invalid]="
+                      changeEmailForm.controls.password.touched &&
+                      changeEmailForm.controls.password.invalid
+                    "
+                  />
+                  <div class="invalid-feedback">Escribe tu contraseña.</div>
+                </div>
+                <button
+                  type="submit"
+                  class="btn btn-outline-primary w-100"
+                  [disabled]="sending() || secondsLeft() > 0"
+                >
+                  Cambiar correo y enviar código
+                </button>
+                @if (secondsLeft() > 0) {
+                  <div class="form-text text-center">
+                    Podrás cambiar el correo en {{ secondsLeft() }} s.
+                  </div>
+                }
+              </form>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="alert alert-light border small d-flex gap-2 mt-3 mb-0">
+        <i class="bi bi-info-circle text-guinda"></i>
+        <div>El código vence en 10 minutos. Puedes pedir hasta 3 reenvíos por hora.</div>
+      </div>
+      <p class="small text-center text-secondary mt-3 mb-0">
+        ¿Ya verificaste tu correo? <a routerLink="/login" class="fw-semibold">Inicia sesión</a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,103 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-5">
+      <div class="card">
+        <div class="card-body p-4">
+          <h1 class="h4 fw-bold mb-1">Iniciar sesión</h1>
+          <p class="small text-secondary mb-4">Postulantes y empresas usan la misma entrada.</p>
+
+          @if (successMessage()) {
+            <div class="alert alert-success small">{{ successMessage() }}</div>
+          }
+          @if (lockedUntil()) {
+            <div class="alert alert-danger d-flex gap-2" role="alert">
+              <i class="bi bi-shield-lock-fill fs-5"></i>
+              <div>
+                <div class="fw-bold">Cuenta bloqueada por 15 minutos</div>
+                <div class="small">
+                  Registramos varios intentos fallidos. Podrás intentarlo de nuevo a las
+                  <strong>{{ lockedUntil() }}</strong
+                  >, o restablece tu contraseña ahora.
+                </div>
+                <a routerLink="/forgot-password" class="btn btn-sm btn-outline-danger mt-2">
+                  <i class="bi bi-key me-1"></i> Restablecer contraseña
+                </a>
+              </div>
+            </div>
+          }
+          @if (errorMessage()) {
+            <div class="alert alert-danger small">{{ errorMessage() }}</div>
+          }
+
+          <form class="d-flex flex-column gap-3" [formGroup]="loginForm" (ngSubmit)="submit()">
+            <div>
+              <label for="login-email" class="form-label fw-semibold small mb-1"
+                >Correo electrónico</label
+              >
+              <input
+                id="login-email"
+                type="email"
+                class="form-control form-control-lg"
+                autocomplete="email"
+                formControlName="email"
+                [class.is-invalid]="
+                  loginForm.controls.email.touched && loginForm.controls.email.invalid
+                "
+              />
+              <div class="invalid-feedback">Escribe un correo válido.</div>
+            </div>
+            <div>
+              <label for="login-password" class="form-label fw-semibold small mb-1"
+                >Contraseña</label
+              >
+              <div class="input-group input-group-lg has-validation">
+                <input
+                  id="login-password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  class="form-control"
+                  autocomplete="current-password"
+                  formControlName="password"
+                  [class.is-invalid]="
+                    loginForm.controls.password.touched && loginForm.controls.password.invalid
+                  "
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  (click)="showPassword.set(!showPassword())"
+                >
+                  <i class="bi" [class]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+                <div class="invalid-feedback">Escribe tu contraseña.</div>
+              </div>
+            </div>
+            <div class="text-end">
+              <a routerLink="/forgot-password" class="small fw-semibold text-decoration-none"
+                >¿Olvidaste tu contraseña?</a
+              >
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100" [disabled]="sending()">
+              @if (sending()) {
+                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+              }
+              Ingresar
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <div class="small text-secondary mb-2">¿Aún no tienes cuenta?</div>
+        <div class="d-flex gap-2">
+          <a routerLink="/register/applicant" class="btn btn-outline-primary flex-fill">
+            <i class="bi bi-person-plus me-1"></i> Soy postulante
+          </a>
+          <a routerLink="/register/company" class="btn btn-outline-ocre flex-fill">
+            <i class="bi bi-building-add me-1"></i> Soy empresa
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

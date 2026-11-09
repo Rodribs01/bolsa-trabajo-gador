@@ -1,0 +1,199 @@
+<div class="container py-4">
+  <nav aria-label="Ruta" class="small mb-2">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a routerLink="/">Inicio</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Ofertas</li>
+    </ol>
+  </nav>
+  <h1 class="h3 fw-bold mb-4">Ofertas de trabajo</h1>
+
+  <div class="row g-4">
+    <aside class="col-lg-3 d-lg-block" [class.d-none]="!showFilters()">
+      <form class="card" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+        <div class="card-body d-flex flex-column gap-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h2 class="h6 fw-bold mb-0"><i class="bi bi-funnel me-1"></i> Filtros</h2>
+            <button type="button" class="btn btn-link btn-sm p-0" (click)="clearFilters()">
+              Limpiar
+            </button>
+          </div>
+          <div>
+            <label for="filter-keyword" class="form-label small fw-semibold mb-1"
+              >Palabra clave</label
+            >
+            <input
+              id="filter-keyword"
+              class="form-control"
+              maxlength="100"
+              formControlName="keyword"
+            />
+          </div>
+          <div>
+            <label for="filter-profession" class="form-label small fw-semibold mb-1"
+              >Profesión</label
+            >
+            <select id="filter-profession" class="form-select" formControlName="professionId">
+              <option value="">Todas</option>
+              @for (profession of professions(); track profession.id) {
+                <option [value]="profession.id">{{ profession.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="filter-municipality" class="form-label small fw-semibold mb-1"
+              >Municipio</label
+            >
+            <select id="filter-municipality" class="form-select" formControlName="municipalityId">
+              <option value="">Todos</option>
+              @for (municipality of municipalities(); track municipality.id) {
+                <option [value]="municipality.id">{{ municipality.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="filter-modality" class="form-label small fw-semibold mb-1">Modalidad</label>
+            <select id="filter-modality" class="form-select" formControlName="modalityId">
+              <option value="">Todas</option>
+              @for (modality of modalities(); track modality.id) {
+                <option [value]="modality.id">{{ modality.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="filter-salary" class="form-label small fw-semibold mb-1"
+              >Salario mínimo</label
+            >
+            <div class="input-group">
+              <span class="input-group-text">Bs.</span>
+              <input
+                id="filter-salary"
+                type="text"
+                inputmode="numeric"
+                maxlength="9"
+                class="form-control"
+                formControlName="minSalary"
+              />
+            </div>
+            <div class="form-check mt-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="filter-negotiable"
+                formControlName="includeNegotiable"
+              />
+              <label class="form-check-label small" for="filter-negotiable"
+                >Incluir salario «A tratar»</label
+              >
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Aplicar filtros</button>
+        </div>
+      </form>
+    </aside>
+
+    <section class="col-lg-9">
+      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <button
+            type="button"
+            class="btn btn-outline-primary d-lg-none"
+            (click)="showFilters.set(!showFilters())"
+          >
+            <i class="bi bi-funnel"></i> Filtros
+          </button>
+          @if (!loading()) {
+            <span class="text-secondary">
+              <strong class="text-body">{{ total() }}</strong>
+              {{ total() === 1 ? 'oferta encontrada' : 'ofertas encontradas' }}
+            </span>
+          }
+          @for (chip of chips(); track chip.key) {
+            <button
+              type="button"
+              class="badge rounded-pill text-bg-light border"
+              [attr.aria-label]="'Quitar filtro ' + chip.label"
+              (click)="removeFilter(chip.key)"
+            >
+              {{ chip.label }} <i class="bi bi-x"></i>
+            </button>
+          }
+        </div>
+        <div class="d-flex align-items-center gap-2" [formGroup]="filterForm">
+          <label for="filter-sort" class="small text-secondary text-nowrap">Ordenar por</label>
+          <select
+            id="filter-sort"
+            class="form-select form-select-sm"
+            style="width: 180px"
+            formControlName="sort"
+            (change)="applyFilters()"
+          >
+            <option value="recent">Más recientes</option>
+            <option value="closing">Cierre más próximo</option>
+            <option value="salary">Mayor salario</option>
+          </select>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-secondary" role="status">
+            <span class="visually-hidden">Cargando ofertas</span>
+          </div>
+        </div>
+      } @else if (errorMessage()) {
+        <div class="alert alert-danger">{{ errorMessage() }}</div>
+      } @else if (offers().length === 0) {
+        <div class="card">
+          <div class="card-body text-center text-secondary py-5">
+            <i class="bi bi-search fs-2 d-block mb-2"></i>
+            No encontramos ofertas con esos filtros. Prueba con otros.
+          </div>
+        </div>
+      } @else {
+        <div class="row g-3">
+          @for (offer of offers(); track offer.id) {
+            <div class="col-md-6">
+              <app-offer-card [offer]="offer" />
+            </div>
+          }
+        </div>
+
+        <nav
+          aria-label="Paginación de ofertas"
+          class="mt-4 d-flex flex-wrap justify-content-between align-items-center gap-2"
+        >
+          <span class="small text-secondary">
+            Mostrando {{ firstShown() }}–{{ lastShown() }} de {{ total() }}
+          </span>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="page() === 1">
+              <button
+                type="button"
+                class="page-link"
+                aria-label="Página anterior"
+                [disabled]="page() === 1"
+                (click)="goToPage(page() - 1)"
+              >
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item active" aria-current="page">
+              <span class="page-link">Página {{ page() }} de {{ totalPages() }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="page() >= totalPages()">
+              <button
+                type="button"
+                class="page-link"
+                aria-label="Página siguiente"
+                [disabled]="page() >= totalPages()"
+                (click)="goToPage(page() + 1)"
+              >
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      }
+    </section>
+  </div>
+</div>

@@ -1,0 +1,203 @@
+<section class="bg-white border-bottom">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <h1 class="display-6 fw-bold mb-2">Encuentra trabajo en el departamento de Oruro</h1>
+        <p class="text-secondary fs-5 mb-4">
+          Ofertas de empresas validadas por la Gobernación. Postula en línea, sin intermediarios.
+        </p>
+        <form class="card p-3" [formGroup]="searchForm" (ngSubmit)="search()">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+              <label for="home-keyword" class="form-label small fw-semibold mb-1"
+                >Palabra clave</label
+              >
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input
+                  id="home-keyword"
+                  type="text"
+                  class="form-control"
+                  placeholder="Cargo, descripción o empresa"
+                  maxlength="100"
+                  formControlName="keyword"
+                />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label for="home-municipality" class="form-label small fw-semibold mb-1"
+                >Municipio</label
+              >
+              <select
+                id="home-municipality"
+                class="form-select form-select-lg"
+                formControlName="municipalityId"
+              >
+                <option value="">Todos los municipios</option>
+                @for (municipality of municipalities(); track municipality.id) {
+                  <option [value]="municipality.id">{{ municipality.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-2 d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-search me-1"></i> Buscar
+              </button>
+            </div>
+          </div>
+        </form>
+        <div class="d-flex flex-wrap gap-2 mt-3 small">
+          <span class="text-secondary">Búsquedas frecuentes:</span>
+          @for (word of frequentSearches; track word) {
+            <a
+              routerLink="/job-offers"
+              [queryParams]="{ keyword: word }"
+              class="chip text-decoration-none"
+            >
+              {{ word }}
+            </a>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container py-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+      <h2 class="h4 fw-bold mb-0">Últimas ofertas</h2>
+      @if (!loading() && !error()) {
+        <div class="text-secondary small">
+          {{ totalOffers() }} {{ totalOffers() === 1 ? 'oferta activa' : 'ofertas activas' }} en
+          este momento
+        </div>
+      }
+    </div>
+    <a routerLink="/job-offers" class="fw-semibold text-decoration-none">
+      Ver todas las ofertas <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando ofertas</span>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-danger">No pudimos cargar las ofertas. Intenta de nuevo más tarde.</div>
+  } @else if (offers().length === 0) {
+    <div class="card">
+      <div class="card-body text-center text-secondary py-5">
+        <i class="bi bi-briefcase fs-2 d-block mb-2"></i>
+        Por ahora no hay ofertas publicadas. Vuelve pronto.
+      </div>
+    </div>
+  } @else {
+    <div class="row g-3">
+      @for (offer of offers(); track offer.id) {
+        <div class="col-md-6 col-lg-4">
+          <app-offer-card [offer]="offer" />
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<section id="como" class="bg-white border-top border-bottom">
+  <div class="container py-5">
+    <h2 class="h4 fw-bold text-center mb-1">¿Cómo funciona?</h2>
+    <p class="text-secondary text-center mb-4">Tres pasos para cada caso.</p>
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <i class="bi bi-person-badge fs-4 text-guinda"></i>
+              <h3 class="h5 fw-bold mb-0">Para postulantes</h3>
+            </div>
+            <ol class="list-unstyled d-flex flex-column gap-3 mb-4">
+              <li class="d-flex gap-3">
+                <span class="paso-num">1</span>
+                <div>
+                  <div class="fw-semibold">Crea tu cuenta</div>
+                  <div class="small text-secondary">
+                    Con tu CI, celular y correo. Te enviamos un código a tu correo para verificarlo.
+                  </div>
+                </div>
+              </li>
+              <li class="d-flex gap-3">
+                <span class="paso-num">2</span>
+                <div>
+                  <div class="fw-semibold">Completa tu perfil</div>
+                  <div class="small text-secondary">
+                    Formación, experiencia, habilidades y tu CV en PDF. Necesitas más del 80 % para
+                    postular.
+                  </div>
+                </div>
+              </li>
+              <li class="d-flex gap-3">
+                <span class="paso-num">3</span>
+                <div>
+                  <div class="fw-semibold">Postula y sigue tu proceso</div>
+                  <div class="small text-secondary">
+                    Ve en qué estado está cada postulación, desde «Visto» hasta «Contratado».
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <a
+              routerLink="/register/applicant"
+              class="btn btn-primary btn-lg align-self-start mt-auto"
+            >
+              <i class="bi bi-person-plus me-1"></i> Soy postulante
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <i class="bi bi-buildings fs-4 text-ocre"></i>
+              <h3 class="h5 fw-bold mb-0">Para empresas</h3>
+            </div>
+            <ol class="list-unstyled d-flex flex-column gap-3 mb-4">
+              <li class="d-flex gap-3">
+                <span class="paso-num ocre">1</span>
+                <div>
+                  <div class="fw-semibold">Registra tu empresa</div>
+                  <div class="small text-secondary">
+                    NIT, representante legal y un documento de respaldo en PDF.
+                  </div>
+                </div>
+              </li>
+              <li class="d-flex gap-3">
+                <span class="paso-num ocre">2</span>
+                <div>
+                  <div class="fw-semibold">Validación de la Gobernación</div>
+                  <div class="small text-secondary">
+                    Revisamos tus datos y tu documento antes de habilitar tu cuenta.
+                  </div>
+                </div>
+              </li>
+              <li class="d-flex gap-3">
+                <span class="paso-num ocre">3</span>
+                <div>
+                  <div class="fw-semibold">Publica y selecciona</div>
+                  <div class="small text-secondary">
+                    Crea ofertas, revisa postulantes y avanza tu proceso de selección.
+                  </div>
+                </div>
+              </li>
+            </ol>
+            <a routerLink="/register/company" class="btn btn-ocre btn-lg align-self-start mt-auto">
+              <i class="bi bi-building-add me-1"></i> Soy empresa
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

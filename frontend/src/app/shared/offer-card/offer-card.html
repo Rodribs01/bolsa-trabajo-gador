@@ -1,0 +1,29 @@
+<div class="card h-100 card-hover">
+  <div class="card-body d-flex flex-column gap-2">
+    <div class="d-flex gap-3 align-items-start">
+      <app-company-logo [name]="offer().company.businessName" [logo]="offer().company.logo" />
+      <div class="flex-grow-1" style="min-width: 0">
+        <h3 class="h6 fw-bold mb-0">
+          <a [routerLink]="['/job-offers', offer().id]" class="text-reset text-decoration-none">
+            {{ offer().title }}
+          </a>
+        </h3>
+        <div class="small text-secondary">
+          {{ offer().company.businessName }}
+          <i class="bi bi-patch-check-fill text-success" title="Empresa validada"></i>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-1">
+      <span class="chip"><i class="bi bi-geo-alt"></i>{{ offer().municipality }}</span>
+      <span class="chip"><i class="bi bi-laptop"></i>{{ offer().modality }}</span>
+      <span class="chip"><i class="bi bi-file-earmark-text"></i>{{ offer().contractType }}</span>
+    </div>
+    <div class="d-flex justify-content-between align-items-end mt-auto pt-2 border-top">
+      <div class="fw-bold text-guinda">{{ salary() }}</div>
+      <div class="small text-secondary">
+        <i class="bi bi-calendar-event"></i> Cierra el {{ closingDate() }}
+      </div>
+    </div>
+  </div>
+</div>

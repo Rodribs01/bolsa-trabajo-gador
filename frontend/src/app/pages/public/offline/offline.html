@@ -1,0 +1,28 @@
+<div class="d-flex flex-column min-vh-100">
+  <div class="aguayo"></div>
+  <div
+    class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center px-4 gap-2"
+  >
+    <img
+      src="img/logo-gador.jpg"
+      alt="Logo del Gobierno Autónomo Departamental de Oruro"
+      class="rounded mb-3"
+      style="width: 140px; height: 140px"
+    />
+    <span class="gd-icono bg-secondary-subtle text-secondary">
+      <i class="bi bi-wifi-off"></i>
+    </span>
+    <h1 class="h4 fw-bold mt-2 mb-1">Estás sin conexión</h1>
+    <p class="text-secondary mb-3" style="max-width: 320px">
+      No pudimos conectar con la Bolsa de Trabajo. Revisa tus datos móviles o el wifi y vuelve a
+      intentarlo.
+    </p>
+    <button type="button" class="btn btn-primary btn-lg px-5" (click)="retry()">
+      <i class="bi bi-arrow-clockwise me-1"></i> Reintentar
+    </button>
+  </div>
+  <div class="text-center small text-secondary pb-3">
+    Bolsa de Trabajo Departamental · G.A.D.OR.
+  </div>
+  <div class="aguayo"></div>
+</div>
