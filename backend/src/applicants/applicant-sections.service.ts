@@ -11,6 +11,7 @@ import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { Skill } from '../catalogs/entities/skill.entity.js';
 import { AuditAction } from '../common/enums/audit-action.enum.js';
 import { CatalogType } from '../common/enums/catalog-type.enum.js';
+import { ApplicantsService } from './applicants.service.js';
 import { AddLanguageDto } from './dto/add-language.dto.js';
 import { AddSkillDto } from './dto/add-skill.dto.js';
 import { SaveEducationDto } from './dto/save-education.dto.js';
@@ -46,6 +47,7 @@ export class ApplicantSectionsService {
     @InjectRepository(Catalog)
     private readonly catalogRepository: Repository<Catalog>,
     private readonly auditService: AuditService,
+    private readonly applicantsService: ApplicantsService,
   ) {}
 
   async addEducation(userId: number, dto: SaveEducationDto, ip: string) {
@@ -70,6 +72,7 @@ export class ApplicantSectionsService {
         nationalTitleNumber: dto.nationalTitleNumber || null,
       }),
     );
+    await this.applicantsService.updateCompletion(profileId);
 
     await this.auditService.log({
       userId: userId,
@@ -115,6 +118,7 @@ export class ApplicantSectionsService {
   async removeEducation(userId: number, id: number, ip: string) {
     const education = await this.findEducation(userId, id);
     await this.educationRepository.delete({ id: id });
+    await this.applicantsService.updateCompletion(education.profileId);
 
     await this.auditService.log({
       userId: userId,
@@ -153,6 +157,7 @@ export class ApplicantSectionsService {
         description: dto.description || null,
       }),
     );
+    await this.applicantsService.updateCompletion(profileId);
 
     await this.auditService.log({
       userId: userId,
@@ -204,6 +209,7 @@ export class ApplicantSectionsService {
   async removeExperience(userId: number, id: number, ip: string) {
     const experience = await this.findExperience(userId, id);
     await this.experienceRepository.delete({ id: id });
+    await this.applicantsService.updateCompletion(experience.profileId);
 
     await this.auditService.log({
       userId: userId,
@@ -243,6 +249,7 @@ export class ApplicantSectionsService {
       }
       throw error;
     }
+    await this.applicantsService.updateCompletion(profileId);
 
     await this.auditService.log({
       userId: userId,
@@ -284,6 +291,7 @@ export class ApplicantSectionsService {
   async removeSkill(userId: number, id: number, ip: string) {
     const applicantSkill = await this.findApplicantSkill(userId, id);
     await this.applicantSkillRepository.delete({ id: id });
+    await this.applicantsService.updateCompletion(applicantSkill.profileId);
 
     await this.auditService.log({
       userId: userId,
@@ -324,6 +332,7 @@ export class ApplicantSectionsService {
       }
       throw error;
     }
+    await this.applicantsService.updateCompletion(profileId);
 
     await this.auditService.log({
       userId: userId,
@@ -365,6 +374,7 @@ export class ApplicantSectionsService {
   async removeLanguage(userId: number, id: number, ip: string) {
     const applicantLanguage = await this.findApplicantLanguage(userId, id);
     await this.applicantLanguageRepository.delete({ id: id });
+    await this.applicantsService.updateCompletion(applicantLanguage.profileId);
 
     await this.auditService.log({
       userId: userId,

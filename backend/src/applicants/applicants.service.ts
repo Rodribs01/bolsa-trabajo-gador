@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -19,6 +20,7 @@ import { Education } from './entities/education.entity.js';
 import { Experience } from './entities/experience.entity.js';
 
 const PHOTOS_FOLDER = 'public/photos';
+const CVS_FOLDER = 'private/cvs';
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 const MINIMUM_AGE = 18;
 const EARLIEST_BIRTH_DATE = '1930-01-01';
@@ -156,6 +158,7 @@ export class ApplicantsService {
         { name: `${dto.firstNames} ${dto.lastNames}`, phone: dto.phone },
       );
     });
+    await this.updateCompletion(profile.id);
 
     await this.auditService.log({
       userId: userId,
@@ -204,9 +207,7 @@ export class ApplicantsService {
       throw error;
     }
 
-    if (profile.photo) {
-      await this.fileStorage.delete(PHOTOS_FOLDER, profile.photo);
-    }
+    await this.updateCompletion(profile.id);
 
     await this.auditService.log({
       userId: userId,
@@ -218,7 +219,109 @@ export class ApplicantsService {
       ip: ip,
     });
 
+    if (profile.photo) {
+      await this.fileStorage.delete(PHOTOS_FOLDER, profile.photo);
+    }
+
     return { photo: fileName };
+  }
+
+  async updateCv(
+    userId: number,
+    file: Express.Multer.File | undefined,
+    ip: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Selecciona tu CV en PDF');
+    }
+    if (!this.fileStorage.isPdf(file)) {
+      throw new BadRequestException('El CV debe ser un archivo PDF');
+    }
+
+    const profile = await this.findProfile(userId);
+    const fileName = await this.fileStorage.save(CVS_FOLDER, file);
+
+    try {
+      await this.profileRepository.update({ id: profile.id }, { cv: fileName });
+    } catch (error) {
+      await this.fileStorage.delete(CVS_FOLDER, fileName);
+      throw error;
+    }
+
+    const completionPercentage = await this.updateCompletion(profile.id);
+
+    await this.auditService.log({
+      userId: userId,
+      action: AuditAction.UPDATE,
+      tableName: 'perfiles_postulante',
+      recordId: profile.id,
+      previousData: { cv: profile.cv },
+      newData: { cv: fileName },
+      ip: ip,
+    });
+
+    if (profile.cv) {
+      await this.fileStorage.delete(CVS_FOLDER, profile.cv);
+    }
+
+    return { hasCv: true, completionPercentage: completionPercentage };
+  }
+
+  async getMyCv(userId: number): Promise<StreamableFile> {
+    const profile = await this.findProfile(userId);
+    if (!profile.cv) {
+      throw new NotFoundException('Aún no subiste tu CV');
+    }
+
+    const stream = this.fileStorage.open(CVS_FOLDER, profile.cv);
+    if (!stream) {
+      throw new NotFoundException('El CV no está disponible');
+    }
+    return new StreamableFile(stream, {
+      type: 'application/pdf',
+      disposition: `inline; filename="cv-postulante-${profile.id}.pdf"`,
+    });
+  }
+
+  // Pesos de RF02: datos 20, foto 10, formación 20, experiencia 15, habilidades 15, idiomas 5, CV 15
+  async updateCompletion(profileId: number): Promise<number> {
+    const profile = await this.profileRepository.findOneByOrFail({
+      id: profileId,
+    });
+    let percentage = 0;
+
+    if (
+      profile.birthDate &&
+      profile.address &&
+      profile.municipalityId &&
+      profile.professionId
+    ) {
+      percentage += 20;
+    }
+    if (profile.photo) {
+      percentage += 10;
+    }
+    if (await this.educationRepository.existsBy({ profileId: profileId })) {
+      percentage += 20;
+    }
+    if (await this.experienceRepository.existsBy({ profileId: profileId })) {
+      percentage += 15;
+    }
+    if (await this.skillRepository.existsBy({ profileId: profileId })) {
+      percentage += 15;
+    }
+    if (await this.languageRepository.existsBy({ profileId: profileId })) {
+      percentage += 5;
+    }
+    if (profile.cv) {
+      percentage += 15;
+    }
+
+    await this.profileRepository.update(
+      { id: profileId },
+      { completionPercentage: percentage },
+    );
+    return percentage;
   }
 
   private async findProfile(userId: number): Promise<ApplicantProfile> {

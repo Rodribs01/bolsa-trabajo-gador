@@ -73,6 +73,26 @@ export class ApplicantsController {
     return this.applicantsService.updatePhoto(request.user.id, file, ip);
   }
 
+  @Post('cv')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('cv', {
+      limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 0 },
+    }),
+  )
+  updateCv(
+    @Req() request: AuthenticatedRequest,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Ip() ip: string,
+  ) {
+    return this.applicantsService.updateCv(request.user.id, file, ip);
+  }
+
+  @Get('cv')
+  getCv(@Req() request: AuthenticatedRequest) {
+    return this.applicantsService.getMyCv(request.user.id);
+  }
+
   @Post('educations')
   addEducation(
     @Req() request: AuthenticatedRequest,
