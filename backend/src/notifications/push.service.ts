@@ -151,7 +151,16 @@ export class PushService {
   }
 
   private isAllowedHost(endpoint: string): boolean {
-    const host = new URL(endpoint).hostname;
+    let url: URL;
+    try {
+      url = new URL(endpoint);
+    } catch {
+      return false;
+    }
+    if (url.port || url.username || url.password) {
+      return false;
+    }
+    const host = url.hostname;
     for (const allowed of ALLOWED_PUSH_HOSTS) {
       if (host === allowed || host.endsWith(`.${allowed}`)) {
         return true;

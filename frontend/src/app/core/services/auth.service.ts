@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { SwPush } from '@angular/service-worker';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -17,6 +18,7 @@ const USER_KEY = 'usuario';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private swPush = inject(SwPush);
   private url = `${environment.apiUrl}/auth`;
 
   currentUser = signal<SessionUser | null>(this.readStoredUser());
@@ -100,10 +102,14 @@ export class AuthService {
     this.router.navigateByUrl('/');
   }
 
+  // Al terminar la sesión, por cualquier motivo, el dispositivo deja de recibir avisos de esa cuenta
   clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
+    if (this.swPush.isEnabled) {
+      this.swPush.unsubscribe().catch(() => {});
+    }
   }
 
   // Cerrar sesión en una pestaña también la cierra en las demás del mismo navegador

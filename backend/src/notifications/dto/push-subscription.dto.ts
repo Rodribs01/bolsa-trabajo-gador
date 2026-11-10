@@ -1,4 +1,4 @@
-import { IsString, IsUrl, Length, MaxLength } from 'class-validator';
+import { IsString, IsUrl, Length, Matches, MaxLength } from 'class-validator';
 
 export class PushSubscriptionDto {
   @IsUrl(
@@ -11,10 +11,16 @@ export class PushSubscriptionDto {
   endpoint: string;
 
   @IsString({ message: 'La clave de la suscripción no es válida' })
-  @Length(20, 255, { message: 'La clave de la suscripción no es válida' })
+  @Matches(/^[A-Za-z0-9_-]+=*$/, {
+    message: 'La clave de la suscripción no es válida',
+  })
+  @Length(80, 100, { message: 'La clave de la suscripción no es válida' })
   p256dh: string;
 
   @IsString({ message: 'La clave de la suscripción no es válida' })
-  @Length(8, 255, { message: 'La clave de la suscripción no es válida' })
+  @Matches(/^[A-Za-z0-9_-]+=*$/, {
+    message: 'La clave de la suscripción no es válida',
+  })
+  @Length(16, 30, { message: 'La clave de la suscripción no es válida' })
   auth: string;
 }

@@ -55,13 +55,11 @@ export class PushService {
     return this.swPush.unsubscribe();
   }
 
-  // Al cerrar sesión el dispositivo deja de recibir avisos de esa cuenta
   forgetDevice(): void {
     const endpoint = this.endpoint();
     if (!endpoint) {
       return;
     }
     this.removeSubscription(endpoint).subscribe({ error: () => {} });
-    this.unsubscribeDevice().catch(() => {});
   }
 }
