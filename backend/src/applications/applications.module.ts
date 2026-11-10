@@ -8,6 +8,7 @@ import { Company } from '../companies/entities/company.entity.js';
 import { JobOfferSkill } from '../job-offers/entities/job-offer-skill.entity.js';
 import { JobOffer } from '../job-offers/entities/job-offer.entity.js';
 import { JobOffersModule } from '../job-offers/job-offers.module.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
 import { ApplicationsController } from './applications.controller.js';
 import { ApplicationsService } from './applications.service.js';
 import { CompanyApplicationsController } from './company-applications.controller.js';
@@ -27,6 +28,7 @@ import { Application } from './entities/application.entity.js';
     ApplicantsModule,
     AuditModule,
     JobOffersModule,
+    NotificationsModule,
   ],
   controllers: [ApplicationsController, CompanyApplicationsController],
   providers: [ApplicationsService, CompanyApplicationsService],

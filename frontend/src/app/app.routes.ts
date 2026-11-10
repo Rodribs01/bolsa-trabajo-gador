@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
 import { ChangePassword } from './pages/account/change-password/change-password';
+import { Notifications } from './pages/account/notifications/notifications';
 import { Companies } from './pages/admin/companies/companies';
 import { OffersReview } from './pages/admin/offers-review/offers-review';
 import { ApplicantDetail } from './pages/company/applicant-detail/applicant-detail';
@@ -74,6 +75,13 @@ export const routes: Routes = [
     canActivate: [roleGuard],
     data: { roles: ['POSTULANTE', 'EMPRESA', 'SUPERADMIN'] },
     title: 'Cambiar contraseña',
+  },
+  {
+    path: 'notifications',
+    component: Notifications,
+    canActivate: [roleGuard],
+    data: { roles: ['POSTULANTE', 'EMPRESA', 'SUPERADMIN'] },
+    title: 'Notificaciones',
   },
   { path: '**', redirectTo: '' },
 ];

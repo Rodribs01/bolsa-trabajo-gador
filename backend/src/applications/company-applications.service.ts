@@ -15,9 +15,11 @@ import { ApplicationStatus } from '../common/enums/application-status.enum.js';
 import { AuditAction } from '../common/enums/audit-action.enum.js';
 import { CompanyStatus } from '../common/enums/company-status.enum.js';
 import { JobOfferStatus } from '../common/enums/job-offer-status.enum.js';
+import { NotificationType } from '../common/enums/notification-type.enum.js';
 import { Company } from '../companies/entities/company.entity.js';
 import { JobOfferSkill } from '../job-offers/entities/job-offer-skill.entity.js';
 import { JobOffer } from '../job-offers/entities/job-offer.entity.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { ListOfferApplicationsDto } from './dto/list-offer-applications.dto.js';
 import { UpdateApplicationStatusDto } from './dto/update-application-status.dto.js';
 import { Application } from './entities/application.entity.js';
@@ -57,6 +59,7 @@ export class CompanyApplicationsService {
     private readonly applicantSkillRepository: Repository<ApplicantSkill>,
     private readonly applicantsService: ApplicantsService,
     private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findByOffer(
@@ -191,6 +194,14 @@ export class CompanyApplicationsService {
       ip: ip,
     });
 
+    await this.notificationsService.notify({
+      userId: application.profile.userId,
+      type: NotificationType.APPLICATION_STATUS,
+      title: 'Tu postulación cambió de estado',
+      message: `Tu postulación a "${application.jobOffer.title}" en ${application.jobOffer.company.businessName} pasó al estado "${statusName(dto.status)}".`,
+      link: '/applicant/applications',
+    });
+
     return { id: id, status: dto.status };
   }
 
@@ -218,7 +229,7 @@ export class CompanyApplicationsService {
         status: Not(ApplicationStatus.WITHDRAWN),
         jobOffer: { companyId: companyId },
       },
-      relations: { jobOffer: true, profile: true },
+      relations: { jobOffer: { company: true }, profile: true },
     });
     if (!application) {
       throw new NotFoundException('Postulación no encontrada');
@@ -255,6 +266,14 @@ export class CompanyApplicationsService {
       previousData: { estado: ApplicationStatus.APPLIED },
       newData: { estado: ApplicationStatus.SEEN },
       ip: ip,
+    });
+
+    await this.notificationsService.notify({
+      userId: application.profile.userId,
+      type: NotificationType.CV_VIEWED,
+      title: 'Una empresa revisó tu postulación',
+      message: `${application.jobOffer.company.businessName} abrió tu perfil para la oferta "${application.jobOffer.title}".`,
+      link: '/applicant/applications',
     });
 
     application.status = ApplicationStatus.SEEN;
@@ -307,4 +326,8 @@ export class CompanyApplicationsService {
     }
     return items;
   }
+}
+
+function statusName(status: ApplicationStatus): string {
+  return status.charAt(0) + status.slice(1).toLowerCase();
 }

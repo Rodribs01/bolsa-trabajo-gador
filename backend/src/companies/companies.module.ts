@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuditModule } from '../audit/audit.module.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { FilesModule } from '../common/files/files.module.js';
 import { Role } from '../users/entities/role.entity.js';
@@ -14,6 +15,7 @@ import { Company } from './entities/company.entity.js';
     TypeOrmModule.forFeature([Company, User, Role, Catalog]),
     AuditModule,
     FilesModule,
+    NotificationsModule,
   ],
   controllers: [CompaniesController],
   providers: [CompaniesService],
