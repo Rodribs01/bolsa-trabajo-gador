@@ -21,7 +21,10 @@
     "migration:generate": "npm run build && npm run typeorm -- migration:generate",
     "migration:run": "npm run build && npm run typeorm -- migration:run",
     "migration:revert": "npm run build && npm run typeorm -- migration:revert",
-    "seed": "npm run build && node dist/database/seeds/seed.js"
+    "seed": "npm run build && node dist/database/seeds/seed.js",
+    "migration:run:prod": "npm run typeorm -- migration:run",
+    "seed:prod": "node dist/database/seeds/seed.js",
+    "start:render": "npm run migration:run:prod && npm run seed:prod && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

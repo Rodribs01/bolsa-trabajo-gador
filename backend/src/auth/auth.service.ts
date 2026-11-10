@@ -320,7 +320,7 @@ export class AuthService {
       }),
     );
 
-    const frontendUrl = this.config.get<string>('FRONTEND_URL');
+    const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');
     const link = `${frontendUrl}/reset-password?token=${token}`;
     this.mailService
       .send(
