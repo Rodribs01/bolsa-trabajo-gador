@@ -21,6 +21,10 @@ export class AuthService {
 
   currentUser = signal<SessionUser | null>(this.readStoredUser());
 
+  constructor() {
+    window.addEventListener('storage', () => this.syncWithOtherTabs());
+  }
+
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${this.url}/login`, { email: email, password: password })
@@ -100,6 +104,18 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
+  }
+
+  // Cerrar sesión en una pestaña también la cierra en las demás del mismo navegador
+  private syncWithOtherTabs(): void {
+    const wasLoggedIn = this.currentUser() !== null;
+    const user = this.readStoredUser();
+    this.currentUser.set(user);
+    if (wasLoggedIn && !user) {
+      this.router.navigate(['/login'], {
+        state: { message: 'Tu sesión se cerró en otra pestaña. Vuelve a iniciar sesión.' },
+      });
+    }
   }
 
   private saveSession(response: LoginResponse): void {
