@@ -10,6 +10,7 @@ import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CatalogsModule } from './catalogs/catalogs.module.js';
 import { CompaniesModule } from './companies/companies.module.js';
+import { DashboardModule } from './dashboard/dashboard.module.js';
 import { JobOffersModule } from './job-offers/job-offers.module.js';
 import { dataSourceOptions } from './database/data-source.js';
 
@@ -32,6 +33,7 @@ import { dataSourceOptions } from './database/data-source.js';
     AuthModule,
     CatalogsModule,
     CompaniesModule,
+    DashboardModule,
     JobOffersModule,
   ],
   providers: [

@@ -64,7 +64,12 @@ export const routes: Routes = [
     canActivate: [roleGuard],
     data: { roles: ['SUPERADMIN'] },
     children: [
-      { path: '', redirectTo: 'companies', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/admin/dashboard/dashboard').then((m) => m.Dashboard),
+        title: 'Dashboard',
+      },
       { path: 'companies', component: Companies, title: 'Validación de empresas' },
       { path: 'job-offers', component: OffersReview, title: 'Ofertas por revisar' },
     ],

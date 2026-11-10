@@ -2,13 +2,17 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CompanyPage, PendingOfferPage } from '../models/admin.model';
+import { CompanyPage, DashboardSummary, PendingOfferPage } from '../models/admin.model';
 import { Company } from '../models/company.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private http = inject(HttpClient);
   private url = `${environment.apiUrl}/admin`;
+
+  getDashboard(): Observable<DashboardSummary> {
+    return this.http.get<DashboardSummary>(`${this.url}/dashboard`);
+  }
 
   getCompanies(status: string, page: number, limit: number): Observable<CompanyPage> {
     return this.http.get<CompanyPage>(`${this.url}/companies`, {

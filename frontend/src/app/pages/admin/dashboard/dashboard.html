@@ -1,0 +1,234 @@
+<div class="container py-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h1 class="h3 fw-bold mb-0">Dashboard</h1>
+    @if (summary(); as data) {
+      <div class="d-flex align-items-center gap-2 small text-secondary">
+        Actualizado {{ formatDateTime(data.calculatedAt) }}
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          title="Actualizar"
+          [disabled]="loading()"
+          (click)="load()"
+        >
+          <i class="bi bi-arrow-clockwise"></i>
+          <span class="visually-hidden">Actualizar</span>
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger small">{{ errorMessage() }}</div>
+  }
+
+  @if (loading() && !summary()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando indicadores</span>
+      </div>
+    </div>
+  } @else if (summary(); as data) {
+    <div class="row row-cols-2 row-cols-md-4 g-3 mb-3">
+      <div class="col col-xl">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="small text-secondary">Postulantes registrados</div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="fs-3 fw-bold">{{ data.applicants.total }}</span>
+              <i class="bi bi-people fs-5 text-primary"></i>
+            </div>
+            <div class="small text-success">+{{ data.applicants.thisMonth }} este mes</div>
+          </div>
+        </div>
+      </div>
+      <div class="col col-xl">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="small text-secondary">Empresas aprobadas</div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="fs-3 fw-bold">{{ data.companies.approved }}</span>
+              <i class="bi bi-building-check fs-5 text-success"></i>
+            </div>
+            <div class="small text-success">+{{ data.companies.approvedThisMonth }} este mes</div>
+          </div>
+        </div>
+      </div>
+      <div class="col col-xl">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="small text-secondary">Empresas pendientes</div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="fs-3 fw-bold">{{ data.companies.pending }}</span>
+              <i class="bi bi-hourglass-split fs-5 text-warning"></i>
+            </div>
+            <div class="small text-secondary">requieren revisión</div>
+          </div>
+        </div>
+      </div>
+      <div class="col col-xl">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="small text-secondary">Ofertas activas</div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="fs-3 fw-bold">{{ data.offers.active }}</span>
+              <i class="bi bi-briefcase fs-5 text-primary"></i>
+            </div>
+            <div class="small text-secondary">publicadas y en selección</div>
+          </div>
+        </div>
+      </div>
+      <div class="col col-xl">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="small text-secondary">Publicadas este mes</div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="fs-3 fw-bold">{{ data.offers.publishedThisMonth }}</span>
+              <i class="bi bi-megaphone fs-5 text-primary"></i>
+            </div>
+            <div class="small text-secondary">aprobadas por la Gobernación</div>
+          </div>
+        </div>
+      </div>
+      <div class="col col-xl">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="small text-secondary">Cerradas este mes</div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="fs-3 fw-bold">{{ data.offers.closedThisMonth }}</span>
+              <i class="bi bi-lock fs-5 text-secondary"></i>
+            </div>
+            <div class="small text-secondary">por la empresa</div>
+          </div>
+        </div>
+      </div>
+      <div class="col col-xl">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="small text-secondary">Tasa de contratación</div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="fs-3 fw-bold">{{ formatRate(data.applications.hiringRate) }} %</span>
+              <i class="bi bi-person-check fs-5 text-success"></i>
+            </div>
+            <div class="small text-secondary">
+              {{ data.applications.hired }} contratados de
+              {{ data.applications.total }} postulaciones
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h2 class="h6 fw-bold">Postulaciones por mes</h2>
+            <div style="height: 280px">
+              <canvas baseChart type="bar" [data]="barData()" [options]="barOptions"></canvas>
+            </div>
+            <div class="small text-secondary mt-2">
+              <i class="bi bi-square-fill" style="color: #e0b23c"></i> Mes en curso
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100">
+          <div class="card-body">
+            <h2 class="h6 fw-bold">Postulantes por profesión</h2>
+            @if (professionLegend().length === 0) {
+              <p class="small text-secondary mb-0">
+                Aún no hay postulantes con profesión registrada.
+              </p>
+            } @else {
+              <div style="height: 180px">
+                <canvas baseChart type="pie" [data]="pieData()" [options]="pieOptions"></canvas>
+              </div>
+              <ul class="list-unstyled small mt-3 mb-0">
+                @for (item of professionLegend(); track item.name) {
+                  <li class="d-flex justify-content-between gap-2 mb-1">
+                    <span>
+                      <i class="bi bi-square-fill me-1" [style.color]="item.color"></i
+                      >{{ item.name }}
+                    </span>
+                    <span class="fw-semibold text-nowrap">{{ item.percentage }} %</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100">
+          <div class="card-body">
+            <h2 class="h6 fw-bold">Empresas por rubro</h2>
+            @if (sectorBars().length === 0) {
+              <p class="small text-secondary mb-0">Aún no hay empresas aprobadas.</p>
+            } @else {
+              @for (bar of sectorBars(); track bar.name) {
+                <div class="mb-2">
+                  <div class="d-flex justify-content-between small">
+                    <span>{{ bar.name }}</span>
+                    <span class="fw-semibold">{{ bar.total }}</span>
+                  </div>
+                  <div
+                    class="progress"
+                    style="height: 8px"
+                    role="progressbar"
+                    [attr.aria-label]="bar.name"
+                    [attr.aria-valuenow]="bar.total"
+                  >
+                    <div
+                      class="progress-bar"
+                      style="background-color: #1f3b8f"
+                      [style.width.%]="bar.width"
+                    ></div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <a routerLink="/admin/companies" class="card text-decoration-none text-body h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i class="bi bi-hourglass-split fs-4 text-warning"></i>
+            <div class="flex-grow-1">
+              @if (data.companies.pending === 0) {
+                No hay empresas esperando validación
+              } @else {
+                <strong>{{ data.companies.pending }} empresas</strong> esperan validación
+                @if (data.companies.oldestPendingSince) {
+                  (la más antigua desde hace
+                  {{ daysSince(data.companies.oldestPendingSince) }} días)
+                }
+              }
+            </div>
+            <i class="bi bi-chevron-right text-secondary"></i>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-6">
+        <a routerLink="/admin/job-offers" class="card text-decoration-none text-body h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <i class="bi bi-clipboard-check fs-4 text-primary"></i>
+            <div class="flex-grow-1">
+              @if (data.offers.inReview === 0) {
+                No hay ofertas por revisar
+              } @else {
+                <strong>{{ data.offers.inReview }} ofertas</strong> en revisión
+              }
+            </div>
+            <i class="bi bi-chevron-right text-secondary"></i>
+          </div>
+        </a>
+      </div>
+    </div>
+  }
+</div>
