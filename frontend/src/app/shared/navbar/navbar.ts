@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -9,7 +10,17 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class Navbar {
   authService = inject(AuthService);
+  notificationService = inject(NotificationService);
+  private router = inject(Router);
   menuOpen = signal(false);
+
+  constructor() {
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd && this.authService.currentUser()) {
+        this.notificationService.refreshUnreadCount();
+      }
+    });
+  }
 
   closeMenu(): void {
     this.menuOpen.set(false);
@@ -17,6 +28,7 @@ export class Navbar {
 
   logout(): void {
     this.closeMenu();
+    this.notificationService.unreadCount.set(0);
     this.authService.logout();
   }
 

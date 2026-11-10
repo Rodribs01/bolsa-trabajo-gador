@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApplicantProfile } from '../applicants/entities/applicant-profile.entity.js';
 import { Application } from '../applications/entities/application.entity.js';
 import { AuditModule } from '../audit/audit.module.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { Setting } from '../catalogs/entities/setting.entity.js';
 import { Skill } from '../catalogs/entities/skill.entity.js';
@@ -30,6 +31,7 @@ import { PublicJobOffersService } from './public-job-offers.service.js';
       Application,
     ]),
     AuditModule,
+    NotificationsModule,
   ],
   controllers: [
     PublicJobOffersController,

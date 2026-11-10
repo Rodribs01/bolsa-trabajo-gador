@@ -8,7 +8,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { Application } from '../applications/entities/application.entity.js';
+import { ApplicantProfile } from '../applicants/entities/applicant-profile.entity.js';
 import { AuditService } from '../audit/audit.service.js';
+import { NotificationType } from '../common/enums/notification-type.enum.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { Setting } from '../catalogs/entities/setting.entity.js';
 import { Skill } from '../catalogs/entities/skill.entity.js';
@@ -70,8 +73,11 @@ export class JobOffersService {
     private readonly settingRepository: Repository<Setting>,
     @InjectRepository(Application)
     private readonly applicationRepository: Repository<Application>,
+    @InjectRepository(ApplicantProfile)
+    private readonly profileRepository: Repository<ApplicantProfile>,
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(userId: number, dto: SaveJobOfferDto, ip: string) {
@@ -335,7 +341,35 @@ export class JobOffersService {
       ip,
       { observation: null, publishedAt: new Date() },
     );
+    await this.notifyNewOffer(offer);
     return this.getOfferForAdmin(id);
+  }
+
+  // Se avisa a los postulantes verificados cuya profesión pide la oferta recién publicada
+  private async notifyNewOffer(offer: JobOffer): Promise<void> {
+    const professionIds: number[] = [];
+    for (const item of offer.professions) {
+      professionIds.push(item.professionId);
+    }
+    if (professionIds.length === 0) {
+      return;
+    }
+
+    const profiles = await this.profileRepository.find({
+      where: {
+        professionId: In(professionIds),
+        user: { emailVerified: true, active: true },
+      },
+    });
+    for (const profile of profiles) {
+      await this.notificationsService.notify({
+        userId: profile.userId,
+        type: NotificationType.NEW_OFFER,
+        title: 'Nueva oferta de tu profesión',
+        message: `${offer.company.businessName} publicó la oferta "${offer.title}".`,
+        link: `/job-offers/${offer.id}`,
+      });
+    }
   }
 
   // La Gobernación devuelve la oferta a BORRADOR para que la empresa la corrija

@@ -9,6 +9,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { DataSource, Repository } from 'typeorm';
 import { AuditService } from '../audit/audit.service.js';
+import { NotificationType } from '../common/enums/notification-type.enum.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { Catalog } from '../catalogs/entities/catalog.entity.js';
 import { AuditAction } from '../common/enums/audit-action.enum.js';
 import { CatalogType } from '../common/enums/catalog-type.enum.js';
@@ -38,6 +40,7 @@ export class CompaniesService {
     private readonly catalogRepository: Repository<Catalog>,
     private readonly dataSource: DataSource,
     private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
     private readonly fileStorage: FileStorageService,
   ) {}
 
@@ -243,7 +246,38 @@ export class CompaniesService {
       ip: ip,
     });
 
+    await this.notifyValidation(company, previousStatus, newStatus);
     return this.findOne(id);
+  }
+
+  private async notifyValidation(
+    company: Company,
+    previousStatus: CompanyStatus,
+    newStatus: CompanyStatus,
+  ): Promise<void> {
+    let title = 'Tu empresa fue aprobada';
+    let message = `La Gobernación aprobó a ${company.businessName}. Ya puedes crear ofertas y enviarlas a revisión.`;
+    if (
+      newStatus === CompanyStatus.APPROVED &&
+      previousStatus === CompanyStatus.SUSPENDED
+    ) {
+      title = 'Tu empresa fue reactivada';
+      message = `La Gobernación reactivó a ${company.businessName}. Tus ofertas vuelven a recibir postulaciones.`;
+    } else if (newStatus === CompanyStatus.REJECTED) {
+      title = 'Tu solicitud fue rechazada';
+      message = `La Gobernación rechazó la solicitud de ${company.businessName}. Revisa el motivo en tu panel.`;
+    } else if (newStatus === CompanyStatus.SUSPENDED) {
+      title = 'Tu empresa fue suspendida';
+      message = `La Gobernación suspendió a ${company.businessName}. Tus ofertas dejaron de recibir postulaciones.`;
+    }
+
+    await this.notificationsService.notify({
+      userId: company.userId,
+      type: NotificationType.COMPANY_VALIDATED,
+      title: title,
+      message: message,
+      link: '/company',
+    });
   }
 
   private validateFiles(
