@@ -48,9 +48,21 @@ export class ScheduledTasksService implements OnApplicationBootstrap {
 
   @Cron(CronExpression.EVERY_HOUR)
   async runAll(): Promise<void> {
-    await this.closeExpiredOffers();
-    await this.notifyExpiringFavorites();
-    await this.deleteUnverifiedApplicants();
+    try {
+      await this.closeExpiredOffers();
+    } catch (error) {
+      this.logger.error('Falló el cierre de ofertas vencidas', error);
+    }
+    try {
+      await this.notifyExpiringFavorites();
+    } catch (error) {
+      this.logger.error('Falló el aviso de favoritos por vencer', error);
+    }
+    try {
+      await this.deleteUnverifiedApplicants();
+    } catch (error) {
+      this.logger.error('Falló la limpieza de cuentas sin verificar', error);
+    }
   }
 
   // Al pasar la fecha de cierre la oferta deja de recibir postulaciones y entra en selección
@@ -144,21 +156,21 @@ export class ScheduledTasksService implements OnApplicationBootstrap {
 
     let total = 0;
     for (const user of users) {
-      let deleted = false;
-      await this.dataSource.transaction(async (manager) => {
-        const stillUnverified = await manager.existsBy(User, {
-          id: user.id,
-          emailVerified: false,
+      try {
+        await this.dataSource.transaction(async (manager) => {
+          await manager.update(AuditLog, { userId: user.id }, { userId: null });
+          await manager.delete(ApplicantProfile, { userId: user.id });
+          const result = await manager.delete(User, {
+            id: user.id,
+            emailVerified: false,
+          });
+          // Si la cuenta se verificó mientras corría la tarea, se deshace todo y se conserva
+          if (result.affected !== 1) {
+            throw new Error('La cuenta ya fue verificada');
+          }
         });
-        if (!stillUnverified) {
-          return;
-        }
-        await manager.update(AuditLog, { userId: user.id }, { userId: null });
-        await manager.delete(ApplicantProfile, { userId: user.id });
-        await manager.delete(User, { id: user.id });
-        deleted = true;
-      });
-      if (!deleted) {
+      } catch (error) {
+        this.logger.warn(`No se eliminó la cuenta ${user.id}`, error);
         continue;
       }
       await this.auditService.log({

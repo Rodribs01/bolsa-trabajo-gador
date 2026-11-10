@@ -121,7 +121,7 @@ export class NotificationsService {
     let linkHtml = '';
     if (data.link) {
       const url = `${this.config.getOrThrow<string>('FRONTEND_URL')}${data.link}`;
-      linkHtml = `<p><a href="${url}">Ver en la Bolsa de Trabajo</a></p>`;
+      linkHtml = `<p><a href="${escapeHtml(url)}">Ver en la Bolsa de Trabajo</a></p>`;
     }
     const html =
       `<p>Hola, ${escapeHtml(user.name)}:</p>` +
