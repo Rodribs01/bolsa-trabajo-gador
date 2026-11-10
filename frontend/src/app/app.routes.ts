@@ -73,6 +73,11 @@ export const routes: Routes = [
       { path: 'companies', component: Companies, title: 'Validación de empresas' },
       { path: 'job-offers', component: OffersReview, title: 'Ofertas por revisar' },
       {
+        path: 'reports',
+        loadComponent: () => import('./pages/admin/reports/reports').then((m) => m.Reports),
+        title: 'Reportes',
+      },
+      {
         path: 'catalogs',
         loadComponent: () => import('./pages/admin/catalogs/catalogs').then((m) => m.Catalogs),
         title: 'Catálogos',

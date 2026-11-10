@@ -118,4 +118,17 @@ export class AdminService {
   getAuditTables(): Observable<string[]> {
     return this.http.get<string[]>(`${this.url}/audit/tables`);
   }
+
+  downloadReport(type: string, filters: Record<string, string>): Observable<Blob> {
+    let params = new HttpParams();
+    for (const key of Object.keys(filters)) {
+      if (filters[key]) {
+        params = params.set(key, filters[key]);
+      }
+    }
+    return this.http.get(`${this.url}/reports/${type}`, {
+      params: params,
+      responseType: 'blob',
+    });
+  }
 }

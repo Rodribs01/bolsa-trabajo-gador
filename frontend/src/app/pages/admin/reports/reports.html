@@ -1,0 +1,93 @@
+<div class="container py-4">
+  <h1 class="h3 fw-bold mb-3">Reportes</h1>
+
+  @if (successMessage()) {
+    <div class="alert alert-success small">{{ successMessage() }}</div>
+  }
+  @if (errorMessage()) {
+    <div class="alert alert-danger small">{{ errorMessage() }}</div>
+  }
+
+  <div class="row g-3">
+    @for (card of cards; track card.type) {
+      <div class="col-lg-6">
+        <form class="card h-100" [formGroup]="card.form">
+          <div class="card-body">
+            <div class="d-flex gap-3 align-items-start mb-3">
+              <span class="gd-icono flex-shrink-0"><i class="bi" [class]="card.icon"></i></span>
+              <div>
+                <h2 class="h5 fw-bold mb-0">{{ card.title }}</h2>
+                <p class="small text-secondary mb-0">{{ card.description }}</p>
+              </div>
+            </div>
+            <div class="row g-2">
+              <div class="col-6 col-md-4">
+                <label class="form-label small mb-1" [for]="card.type + '-from'">Desde</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  [id]="card.type + '-from'"
+                  formControlName="from"
+                />
+              </div>
+              <div class="col-6 col-md-4">
+                <label class="form-label small mb-1" [for]="card.type + '-to'">Hasta</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  [id]="card.type + '-to'"
+                  formControlName="to"
+                />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small mb-1" [for]="card.type + '-filter'">{{
+                  card.filterLabel
+                }}</label>
+                <select class="form-select" [id]="card.type + '-filter'" formControlName="filter">
+                  <option value="">Todos</option>
+                  @for (option of filterOptions(card); track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+          <div
+            class="card-footer bg-transparent border-0 pt-0 pb-3 d-flex flex-wrap justify-content-end gap-2"
+          >
+            <button
+              type="button"
+              class="btn btn-outline-success"
+              [disabled]="downloading() !== ''"
+              (click)="download(card, 'xlsx')"
+            >
+              @if (downloading() === card.type + '-xlsx') {
+                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+              } @else {
+                <i class="bi bi-file-earmark-excel me-1"></i>
+              }
+              Exportar Excel
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-danger"
+              [disabled]="downloading() !== ''"
+              (click)="download(card, 'pdf')"
+            >
+              @if (downloading() === card.type + '-pdf') {
+                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+              } @else {
+                <i class="bi bi-file-earmark-pdf me-1"></i>
+              }
+              Exportar PDF
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+  </div>
+  <p class="small text-secondary mt-3 mb-0">
+    Deja las fechas vacías para incluir todo el historial. Los reportes llevan el membrete de la
+    Gobernación y el nombre de quien los emite.
+  </p>
+</div>

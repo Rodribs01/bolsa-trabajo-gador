@@ -31,6 +31,7 @@ export class Navbar {
   isAdminSection(): boolean {
     const url = this.router.url;
     return (
+      url.startsWith('/admin/reports') ||
       url.startsWith('/admin/catalogs') ||
       url.startsWith('/admin/settings') ||
       url.startsWith('/admin/audit')
