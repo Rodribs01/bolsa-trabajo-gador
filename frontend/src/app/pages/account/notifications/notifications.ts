@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppNotification } from '../../../core/models/notification.model';
 import { NotificationService } from '../../../core/services/notification.service';
+import { PushService } from '../../../core/services/push.service';
 import { getErrorMessage } from '../../../core/utils/error-message';
 
 const PAGE_SIZE = 20;
@@ -13,6 +14,7 @@ const PAGE_SIZE = 20;
 export class Notifications implements OnInit {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  pushService = inject(PushService);
 
   items = signal<AppNotification[]>([]);
   total = signal(0);
@@ -20,6 +22,9 @@ export class Notifications implements OnInit {
   loading = signal(true);
   errorMessage = signal('');
   unreadCount = this.notificationService.unreadCount;
+  pushBusy = signal(false);
+  pushMessage = signal('');
+  pushError = signal('');
 
   ngOnInit(): void {
     this.load();
@@ -93,5 +98,68 @@ export class Notifications implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  enablePush(): void {
+    this.pushBusy.set(true);
+    this.pushMessage.set('');
+    this.pushError.set('');
+    this.pushService.getPublicKey().subscribe({
+      next: (result) => {
+        if (!result.publicKey) {
+          this.showPushError('Los avisos en el dispositivo no están disponibles en este momento.');
+          return;
+        }
+        this.pushService
+          .requestSubscription(result.publicKey)
+          .then((subscription) => this.saveSubscription(subscription))
+          .catch(() => {
+            if (this.pushService.isBlocked()) {
+              this.showPushError(
+                'Bloqueaste los avisos de este sitio. Permítelos desde el navegador.',
+              );
+            } else {
+              this.showPushError('No pudimos activar los avisos en este dispositivo.');
+            }
+          });
+      },
+      error: (error) => this.showPushError(getErrorMessage(error)),
+    });
+  }
+
+  private saveSubscription(subscription: PushSubscription): void {
+    this.pushService.saveSubscription(subscription).subscribe({
+      next: (result) => {
+        this.pushBusy.set(false);
+        this.pushMessage.set(result.message);
+      },
+      error: (error) => {
+        this.pushService.unsubscribeDevice().catch(() => {});
+        this.showPushError(getErrorMessage(error));
+      },
+    });
+  }
+
+  disablePush(): void {
+    const endpoint = this.pushService.endpoint();
+    if (!endpoint) {
+      return;
+    }
+    this.pushBusy.set(true);
+    this.pushMessage.set('');
+    this.pushError.set('');
+    this.pushService.removeSubscription(endpoint).subscribe({
+      next: (result) => {
+        this.pushService.unsubscribeDevice().catch(() => {});
+        this.pushBusy.set(false);
+        this.pushMessage.set(result.message);
+      },
+      error: (error) => this.showPushError(getErrorMessage(error)),
+    });
+  }
+
+  private showPushError(message: string): void {
+    this.pushBusy.set(false);
+    this.pushError.set(message);
   }
 }

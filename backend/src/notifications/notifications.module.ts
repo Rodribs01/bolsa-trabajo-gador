@@ -7,15 +7,18 @@ import { Favorite } from '../job-offers/entities/favorite.entity.js';
 import { JobOffer } from '../job-offers/entities/job-offer.entity.js';
 import { User } from '../users/entities/user.entity.js';
 import { Notification } from './entities/notification.entity.js';
+import { PushSubscription } from './entities/push-subscription.entity.js';
 import { MailService } from './mail.service.js';
 import { NotificationsController } from './notifications.controller.js';
 import { NotificationsService } from './notifications.service.js';
+import { PushService } from './push.service.js';
 import { ScheduledTasksService } from './scheduled-tasks.service.js';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Notification,
+      PushSubscription,
       User,
       JobOffer,
       Favorite,
@@ -25,7 +28,12 @@ import { ScheduledTasksService } from './scheduled-tasks.service.js';
     AuditModule,
   ],
   controllers: [NotificationsController],
-  providers: [MailService, NotificationsService, ScheduledTasksService],
+  providers: [
+    MailService,
+    NotificationsService,
+    PushService,
+    ScheduledTasksService,
+  ],
   exports: [MailService, NotificationsService],
 })
 export class NotificationsModule {}
