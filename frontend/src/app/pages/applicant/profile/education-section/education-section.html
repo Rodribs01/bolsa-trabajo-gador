@@ -1,0 +1,115 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h2 class="h5 fw-bold mb-0">Formación académica</h2>
+  @if (!showForm()) {
+    <button type="button" class="btn btn-ocre" (click)="startAdd()">
+      <i class="bi bi-plus-lg me-1"></i> Agregar formación
+    </button>
+  }
+</div>
+
+@if (errorMessage()) {
+  <div class="alert alert-danger small">{{ errorMessage() }}</div>
+}
+
+@if (showForm()) {
+  <form class="border rounded p-3 mb-3 bg-light" [formGroup]="educationForm" (ngSubmit)="save()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="education-title" class="form-label small fw-semibold mb-1"
+          >Título obtenido</label
+        >
+        <input
+          id="education-title"
+          class="form-control"
+          maxlength="150"
+          placeholder="Por ejemplo: Licenciatura en Contaduría Pública"
+          formControlName="title"
+          [class.is-invalid]="isInvalid('title')"
+        />
+        <div class="invalid-feedback">Escribe el título (3 a 150 caracteres).</div>
+      </div>
+      <div class="col-md-6">
+        <label for="education-institution" class="form-label small fw-semibold mb-1"
+          >Institución</label
+        >
+        <input
+          id="education-institution"
+          class="form-control"
+          maxlength="150"
+          formControlName="institution"
+          [class.is-invalid]="isInvalid('institution')"
+        />
+        <div class="invalid-feedback">Escribe la institución (3 a 150 caracteres).</div>
+      </div>
+      <div class="col-md-4">
+        <label for="education-year" class="form-label small fw-semibold mb-1"
+          >Año de titulación</label
+        >
+        <input
+          id="education-year"
+          type="number"
+          class="form-control"
+          min="1950"
+          [max]="currentYear"
+          formControlName="graduationYear"
+          [class.is-invalid]="isInvalid('graduationYear')"
+        />
+        <div class="invalid-feedback">Escribe un año entre 1950 y {{ currentYear }}.</div>
+      </div>
+      <div class="col-md-8">
+        <label for="education-number" class="form-label small fw-semibold mb-1"
+          >N.º de título en provisión nacional (opcional)</label
+        >
+        <input
+          id="education-number"
+          class="form-control"
+          maxlength="30"
+          formControlName="nationalTitleNumber"
+        />
+      </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="sending()">Guardar</button>
+    </div>
+  </form>
+}
+
+@if (educations().length === 0 && !showForm()) {
+  <div class="text-center text-secondary py-4">
+    <i class="bi bi-mortarboard fs-2 d-block mb-2"></i>
+    Aún no agregaste tu formación. Suma 20 % a tu perfil.
+  </div>
+}
+@for (education of educations(); track education.id) {
+  <div class="border rounded p-3 mb-2 d-flex gap-3 align-items-start">
+    <i class="bi bi-mortarboard fs-3 text-guinda"></i>
+    <div class="flex-grow-1">
+      <div class="fw-semibold">{{ education.title }}</div>
+      <div class="small text-secondary">
+        {{ education.institution }} · {{ education.graduationYear }}
+        @if (education.nationalTitleNumber) {
+          · Título N.º {{ education.nationalTitleNumber }}
+        }
+      </div>
+    </div>
+    <div class="d-flex flex-column gap-1">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [attr.aria-label]="'Editar ' + education.title"
+        (click)="startEdit(education)"
+      >
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger"
+        [attr.aria-label]="'Eliminar ' + education.title"
+        (click)="remove(education)"
+      >
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  </div>
+}

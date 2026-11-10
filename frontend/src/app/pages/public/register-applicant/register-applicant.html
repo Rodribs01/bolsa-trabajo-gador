@@ -1,0 +1,179 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-9 col-lg-6">
+      <h1 class="h4 fw-bold mb-3">Registro de postulante</h1>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="paso-num">1</span><span class="fw-semibold small">Tus datos</span>
+        <div class="flex-grow-1 border-top"></div>
+        <span class="paso-num pendiente">2</span>
+        <span class="small text-secondary">Verificar correo</span>
+      </div>
+      <div class="progress mb-3" role="progressbar" aria-label="Paso 1 de 2" style="height: 4px">
+        <div class="progress-bar bg-primary" style="width: 50%"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-body p-4">
+          @if (errorMessage()) {
+            <div class="alert alert-danger small">{{ errorMessage() }}</div>
+          }
+          <form class="row g-3" [formGroup]="registerForm" (ngSubmit)="submit()" novalidate>
+            <div class="col-8">
+              <label for="reg-ci" class="form-label small fw-semibold mb-1"
+                >Cédula de identidad</label
+              >
+              <input
+                id="reg-ci"
+                class="form-control"
+                maxlength="13"
+                formControlName="ci"
+                [class.is-invalid]="isInvalid('ci')"
+              />
+              <div class="invalid-feedback">
+                Escribe tu CI con 5 a 10 números (y complemento si tienes, por ejemplo 1234567-1A).
+              </div>
+            </div>
+            <div class="col-4">
+              <label for="reg-issued" class="form-label small fw-semibold mb-1">Expedido</label>
+              <select id="reg-issued" class="form-select" formControlName="ciIssuedIn">
+                @for (option of ciOptions; track option) {
+                  <option [value]="option">{{ option }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-12">
+              <label for="reg-first" class="form-label small fw-semibold mb-1">Nombres</label>
+              <input
+                id="reg-first"
+                class="form-control"
+                maxlength="74"
+                autocomplete="given-name"
+                formControlName="firstNames"
+                [class.is-invalid]="isInvalid('firstNames')"
+              />
+              <div class="invalid-feedback">Escribe tus nombres (al menos 2 letras).</div>
+            </div>
+            <div class="col-12">
+              <label for="reg-last" class="form-label small fw-semibold mb-1">Apellidos</label>
+              <input
+                id="reg-last"
+                class="form-control"
+                maxlength="74"
+                autocomplete="family-name"
+                formControlName="lastNames"
+                [class.is-invalid]="isInvalid('lastNames')"
+              />
+              <div class="invalid-feedback">Escribe tus apellidos (al menos 2 letras).</div>
+            </div>
+            <div class="col-12">
+              <label for="reg-phone" class="form-label small fw-semibold mb-1">Celular</label>
+              <div class="input-group has-validation">
+                <span class="input-group-text">+591</span>
+                <input
+                  id="reg-phone"
+                  class="form-control"
+                  inputmode="numeric"
+                  maxlength="8"
+                  autocomplete="tel-national"
+                  formControlName="phone"
+                  [class.is-invalid]="isInvalid('phone')"
+                />
+                <div class="invalid-feedback">
+                  El celular debe tener 8 dígitos y empezar con 6 o 7.
+                </div>
+              </div>
+              <div class="form-text">Es tu dato de contacto para las empresas.</div>
+            </div>
+            <div class="col-12">
+              <label for="reg-email" class="form-label small fw-semibold mb-1"
+                >Correo electrónico</label
+              >
+              <input
+                id="reg-email"
+                type="email"
+                class="form-control"
+                maxlength="150"
+                autocomplete="email"
+                formControlName="email"
+                [class.is-invalid]="isInvalid('email')"
+              />
+              <div class="invalid-feedback">
+                Escribe un correo válido, por ejemplo nombre&#64;gmail.com
+              </div>
+              <div class="form-text">Te enviaremos un código de 6 dígitos para verificarlo.</div>
+            </div>
+            <div class="col-12">
+              <label for="reg-password" class="form-label small fw-semibold mb-1">Contraseña</label>
+              <div class="input-group has-validation">
+                <input
+                  id="reg-password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  class="form-control"
+                  autocomplete="new-password"
+                  formControlName="password"
+                  [class.is-invalid]="isInvalid('password')"
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  (click)="showPassword.set(!showPassword())"
+                >
+                  <i class="bi" [class]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+              </div>
+              <app-password-rules [password]="registerForm.controls.password.value" />
+            </div>
+            <div class="col-12">
+              <label for="reg-confirm" class="form-label small fw-semibold mb-1"
+                >Confirmar contraseña</label
+              >
+              <input
+                id="reg-confirm"
+                type="password"
+                class="form-control"
+                autocomplete="new-password"
+                formControlName="confirmPassword"
+                [class.is-invalid]="isInvalid('confirmPassword') || passwordsDiffer()"
+              />
+              <div class="invalid-feedback">
+                @if (registerForm.controls.confirmPassword.hasError('required')) {
+                  Confirma tu contraseña.
+                } @else {
+                  Las contraseñas no coinciden.
+                }
+              </div>
+            </div>
+            <div class="col-12 mt-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="reg-terms"
+                  formControlName="acceptTerms"
+                  [class.is-invalid]="isInvalid('acceptTerms')"
+                />
+                <label class="form-check-label small" for="reg-terms">
+                  Acepto que la Gobernación y las empresas a las que postule usen mis datos para
+                  procesos de selección.
+                </label>
+                <div class="invalid-feedback">Debes aceptar para continuar.</div>
+              </div>
+            </div>
+            <div class="col-12 d-grid mt-2">
+              <button type="submit" class="btn btn-primary btn-lg" [disabled]="sending()">
+                @if (sending()) {
+                  <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                }
+                Continuar <i class="bi bi-arrow-right"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <p class="small text-center text-secondary mt-3 mb-0">
+        ¿Ya tienes cuenta? <a routerLink="/login" class="fw-semibold">Inicia sesión</a>
+      </p>
+    </div>
+  </div>
+</div>

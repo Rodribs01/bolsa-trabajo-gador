@@ -1,0 +1,194 @@
+<div class="container py-4">
+  <h1 class="h3 fw-bold mb-3">
+    Ofertas por revisar
+    <span class="badge st-revision align-middle fs-6">{{ total() }} en revisión</span>
+  </h1>
+
+  @if (successMessage()) {
+    <div class="alert alert-success small">{{ successMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando ofertas</span>
+      </div>
+    </div>
+  } @else if (offers().length === 0) {
+    @if (errorMessage()) {
+      <div class="alert alert-danger small">{{ errorMessage() }}</div>
+    }
+    <div class="card">
+      <div class="card-body text-center text-secondary py-5">
+        <i class="bi bi-clipboard-check fs-2 d-block mb-2"></i>
+        No hay ofertas esperando revisión.
+      </div>
+    </div>
+  } @else {
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="list-group">
+          @for (offer of offers(); track offer.id) {
+            <button
+              type="button"
+              class="list-group-item list-group-item-action"
+              [class.active]="selected()?.id === offer.id"
+              (click)="select(offer)"
+            >
+              <div class="fw-semibold">{{ offer.title }}</div>
+              <div class="small" [class.text-secondary]="selected()?.id !== offer.id">
+                {{ offer.company.businessName }} · {{ offer.municipality.name }}
+              </div>
+              <div class="small" [class.text-secondary]="selected()?.id !== offer.id">
+                Enviada el {{ date(offer.updatedAt) }}
+              </div>
+            </button>
+          }
+        </div>
+        <p class="small text-secondary mt-2">Las más antiguas aparecen primero.</p>
+      </div>
+
+      @if (selected(); as offer) {
+        <div class="col-lg-8 d-flex flex-column gap-3">
+          <div class="small fw-semibold text-secondary text-uppercase">
+            Vista previa · así la verá el público
+          </div>
+          <div class="card">
+            <div class="card-body p-4 d-flex gap-3 align-items-center">
+              <app-company-logo
+                [name]="offer.company.businessName"
+                [logo]="offer.company.logo"
+                [large]="true"
+              />
+              <div>
+                <h2 class="h4 fw-bold mb-0">{{ offer.title }}</h2>
+                <div class="text-secondary">
+                  {{ offer.company.businessName }} · {{ offer.company.sector.name }}
+                  @if (offer.company.status !== 'APROBADA') {
+                    <span class="badge bg-danger ms-1">Empresa no aprobada</span>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="datos-clave">
+            <div>
+              <i class="bi bi-laptop"></i>
+              <div class="lbl mt-1">Modalidad</div>
+              <div class="val">{{ offer.modality.name }}</div>
+            </div>
+            <div>
+              <i class="bi bi-file-earmark-text"></i>
+              <div class="lbl mt-1">Contrato</div>
+              <div class="val">{{ offer.contractType.name }}</div>
+            </div>
+            <div>
+              <i class="bi bi-geo-alt"></i>
+              <div class="lbl mt-1">Municipio</div>
+              <div class="val">{{ offer.municipality.name }}</div>
+            </div>
+            <div>
+              <i class="bi bi-cash-coin"></i>
+              <div class="lbl mt-1">Salario</div>
+              <div class="val">{{ salary(offer) }}</div>
+            </div>
+            <div>
+              <i class="bi bi-people"></i>
+              <div class="lbl mt-1">Plazas</div>
+              <div class="val">
+                {{ offer.vacancies }} {{ offer.vacancies === 1 ? 'vacante' : 'vacantes' }}
+              </div>
+            </div>
+            <div>
+              <i class="bi bi-calendar-event"></i>
+              <div class="lbl mt-1">Cierre</div>
+              <div class="val">{{ date(offer.closingDate) }}</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body p-4">
+              <h3 class="h6 fw-bold">Descripción del puesto</h3>
+              <p class="texto-largo">{{ offer.description }}</p>
+              <h3 class="h6 fw-bold">Requisitos obligatorios</h3>
+              <p class="texto-largo mb-1">{{ offer.requiredRequirements }}</p>
+              <p class="small text-secondary">
+                @if (offer.yearsOfExperience > 0) {
+                  Experiencia mínima: {{ offer.yearsOfExperience }}
+                  {{ offer.yearsOfExperience === 1 ? 'año' : 'años' }}
+                } @else {
+                  No se requiere experiencia previa
+                }
+              </p>
+              @if (offer.desiredRequirements) {
+                <h3 class="h6 fw-bold">Requisitos deseables</h3>
+                <p class="texto-largo">{{ offer.desiredRequirements }}</p>
+              }
+              @if (offer.benefits && offer.benefits.length > 0) {
+                <h3 class="h6 fw-bold">Beneficios</h3>
+                <ul class="small">
+                  @for (benefit of offer.benefits; track $index) {
+                    <li>{{ benefit }}</li>
+                  }
+                </ul>
+              }
+              <div class="d-flex flex-wrap gap-1 mt-3">
+                @for (item of offer.skills ?? []; track item.skillId) {
+                  <span class="badge" [class]="item.required ? 'skill' : 'text-bg-light border'">
+                    {{ item.skill.name }}
+                  </span>
+                }
+              </div>
+              @if (offer.professions && offer.professions.length > 0) {
+                <div class="small text-secondary mt-2">
+                  Profesiones:
+                  @for (item of offer.professions; track item.professionId; let last = $last) {
+                    {{ item.profession.name }}{{ last ? '' : ', ' }}
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body p-4">
+              <label for="review-observation" class="form-label fw-semibold mb-1">
+                Observación para la empresa
+                <span class="text-secondary fw-normal">(obligatoria solo si la devuelves)</span>
+              </label>
+              <textarea
+                id="review-observation"
+                class="form-control mb-3"
+                rows="3"
+                maxlength="1000"
+                placeholder='Ej.: Indica el rango salarial o marca "A tratar".'
+                [value]="observation()"
+                (input)="onObservationInput($event)"
+              ></textarea>
+              @if (errorMessage()) {
+                <div class="alert alert-danger small">{{ errorMessage() }}</div>
+              }
+              <div class="d-flex flex-wrap justify-content-end gap-2">
+                <button
+                  type="button"
+                  class="btn btn-outline-warning text-dark"
+                  [disabled]="sending()"
+                  (click)="returnToCompany(offer)"
+                >
+                  <i class="bi bi-arrow-return-left me-1"></i> Devolver con observación
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  [disabled]="sending() || offer.company.status !== 'APROBADA'"
+                  (click)="approve(offer)"
+                >
+                  <i class="bi bi-check2-circle me-1"></i> Aprobar y publicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

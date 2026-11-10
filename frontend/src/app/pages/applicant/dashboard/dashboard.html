@@ -1,0 +1,168 @@
+<div class="container py-4">
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando tu panel</span>
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
+  } @else if (profile(); as profile) {
+    <h1 class="h3 fw-bold mb-1">{{ greeting() }}, {{ firstName(profile) }}</h1>
+    <p class="text-secondary mb-4 primera-mayuscula">
+      {{ today }}
+      @if (profile.profession) {
+        · {{ profile.profession }}
+      }
+      @if (profile.municipality) {
+        · {{ profile.municipality }}
+      }
+    </p>
+
+    <div class="row g-3 mb-4">
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h2 class="h6 fw-bold mb-0">Tu perfil</h2>
+              <span
+                class="fs-4 fw-bold"
+                [class.text-success]="canApply(profile)"
+                [class.text-ocre]="!canApply(profile)"
+                >{{ profile.completionPercentage }} %</span
+              >
+            </div>
+            <div
+              class="progress mb-3"
+              role="progressbar"
+              aria-label="Perfil completado"
+              [attr.aria-valuenow]="profile.completionPercentage"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              style="height: 8px"
+            >
+              <div
+                class="progress-bar"
+                [class.bg-success]="canApply(profile)"
+                [class.bg-warning]="!canApply(profile)"
+                [style.width.%]="profile.completionPercentage"
+              ></div>
+            </div>
+
+            @if (canApply(profile)) {
+              <p class="small text-success mb-3">
+                <i class="bi bi-check-circle-fill me-1"></i> Ya puedes postular a las ofertas.
+              </p>
+            } @else {
+              <p class="small text-secondary mb-2">
+                Para postular necesitas más del {{ threshold }} % y tu CV en PDF. Te falta:
+              </p>
+            }
+            @if (missing().length > 0) {
+              <ul class="list-unstyled mb-3">
+                @for (item of missing(); track item.label) {
+                  <li class="d-flex align-items-center gap-2 py-2 border-bottom small">
+                    <i class="bi text-guinda" [class]="item.icon"></i>
+                    <a
+                      routerLink="/applicant/profile"
+                      [queryParams]="{ tab: item.tab }"
+                      class="flex-grow-1 text-body"
+                      >{{ item.label }}</a
+                    >
+                    <span class="text-secondary">+{{ item.points }} %</span>
+                  </li>
+                }
+              </ul>
+            }
+            <a routerLink="/applicant/profile" class="btn btn-primary mt-auto">
+              @if (missing().length > 0) {
+                Completar mi perfil
+              } @else {
+                Ver mi perfil
+              }
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card h-100">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h6 fw-bold mb-0">Mis postulaciones</h2>
+              <a
+                routerLink="/applicant/applications"
+                class="small fw-semibold text-decoration-none"
+              >
+                Ver todas <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+            @if (applicationsError()) {
+              <div class="alert alert-danger small mb-0">
+                No pudimos cargar tus postulaciones. Intenta de nuevo más tarde.
+              </div>
+            } @else if (totalApplications() === 0) {
+              <div class="text-center text-secondary py-4">
+                <i class="bi bi-send fs-2 d-block mb-2"></i>
+                Aún no postulaste a ninguna oferta.
+                <div class="mt-2">
+                  <a routerLink="/job-offers" class="btn btn-outline-primary btn-sm"
+                    >Buscar ofertas</a
+                  >
+                </div>
+              </div>
+            } @else {
+              <div class="row g-2">
+                @for (item of statusCounts(); track item.status) {
+                  <div class="col-6 col-md-3">
+                    <div class="border rounded p-2 h-100">
+                      <div class="fs-4 fw-bold lh-1 mb-1">{{ item.total }}</div>
+                      <span class="badge" [class]="statusClass(item.status)">{{
+                        statusLabel(item.status)
+                      }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+      <div>
+        <h2 class="h4 fw-bold mb-0">Recomendadas para ti</h2>
+        @if (profile.profession) {
+          <div class="small text-secondary">Según tu profesión: {{ profile.profession }}</div>
+        } @else {
+          <div class="small text-secondary">
+            Elige tu profesión en tu perfil para ver ofertas de tu área.
+          </div>
+        }
+      </div>
+      <a routerLink="/job-offers" class="fw-semibold text-decoration-none">
+        Ver más ofertas <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    @if (recommended().length === 0) {
+      <div class="card">
+        <div class="card-body text-center text-secondary py-4">
+          @if (profile.profession) {
+            Por ahora no hay ofertas publicadas para tu profesión.
+          } @else {
+            Por ahora no hay ofertas publicadas.
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="row g-3">
+        @for (offer of recommended(); track offer.id) {
+          <div class="col-md-6 col-lg-4">
+            <app-offer-card [offer]="offer" />
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

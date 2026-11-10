@@ -1,0 +1,283 @@
+<div class="container py-4">
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando la oferta</span>
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-briefcase fs-2 text-secondary d-block mb-2"></i>
+        <p class="mb-3">{{ errorMessage() }}</p>
+        <a routerLink="/job-offers" class="btn btn-primary">Ver otras ofertas</a>
+      </div>
+    </div>
+  } @else if (offer(); as offer) {
+    <nav aria-label="Ruta" class="small mb-3">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a routerLink="/">Inicio</a></li>
+        <li class="breadcrumb-item"><a routerLink="/job-offers">Ofertas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ offer.title }}</li>
+      </ol>
+    </nav>
+
+    <div class="card mb-3">
+      <div class="card-body p-4 d-flex flex-wrap gap-3 align-items-start">
+        <app-company-logo
+          [name]="offer.company.businessName"
+          [logo]="offer.company.logo"
+          [large]="true"
+        />
+        <div class="flex-grow-1" style="min-width: 240px">
+          @if (offer.publishedAt) {
+            <div class="small text-secondary mb-1">Publicada el {{ date(offer.publishedAt) }}</div>
+          }
+          <h1 class="h3 fw-bold mb-1">{{ offer.title }}</h1>
+          <div class="text-secondary">
+            <span class="fw-semibold text-body">{{ offer.company.businessName }}</span>
+            <i
+              class="bi bi-patch-check-fill text-success ms-1"
+              title="Empresa validada por la Gobernación"
+            ></i>
+            · Rubro: {{ offer.company.sector }}
+          </div>
+        </div>
+        @if (authService.hasRole('POSTULANTE')) {
+          <button
+            type="button"
+            class="btn"
+            [class.btn-primary]="isFavorite()"
+            [class.btn-outline-primary]="!isFavorite()"
+            [disabled]="savingFavorite()"
+            (click)="toggleFavorite(offer)"
+          >
+            <i class="bi me-1" [class]="isFavorite() ? 'bi-heart-fill' : 'bi-heart'"></i>
+            {{ isFavorite() ? 'Guardada' : 'Guardar' }}
+          </button>
+        }
+      </div>
+    </div>
+    @if (favoriteError()) {
+      <div class="alert alert-danger small">{{ favoriteError() }}</div>
+    }
+
+    <div class="datos-clave mb-4">
+      <div>
+        <i class="bi bi-laptop"></i>
+        <div class="lbl mt-1">Modalidad</div>
+        <div class="val">{{ offer.modality }}</div>
+      </div>
+      <div>
+        <i class="bi bi-file-earmark-text"></i>
+        <div class="lbl mt-1">Contrato</div>
+        <div class="val">{{ offer.contractType }}</div>
+      </div>
+      <div>
+        <i class="bi bi-geo-alt"></i>
+        <div class="lbl mt-1">Municipio</div>
+        <div class="val">{{ offer.municipality }}</div>
+      </div>
+      <div>
+        <i class="bi bi-cash-coin"></i>
+        <div class="lbl mt-1">Salario</div>
+        <div class="val">{{ salary(offer) }}</div>
+      </div>
+      <div>
+        <i class="bi bi-people"></i>
+        <div class="lbl mt-1">Plazas</div>
+        <div class="val">
+          {{ offer.vacancies }} {{ offer.vacancies === 1 ? 'vacante' : 'vacantes' }}
+        </div>
+      </div>
+      <div>
+        <i class="bi bi-calendar-event"></i>
+        <div class="lbl mt-1">Cierre</div>
+        <div class="val">{{ date(offer.closingDate) }}</div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-body p-4 d-flex flex-column gap-4">
+            <section>
+              <h2 class="h5 fw-bold">Descripción del puesto</h2>
+              <p class="texto-largo mb-0">{{ offer.description }}</p>
+            </section>
+
+            <section>
+              <h2 class="h5 fw-bold">Requisitos obligatorios</h2>
+              <p class="texto-largo mb-2">{{ offer.requiredRequirements }}</p>
+              <div class="small text-secondary">
+                <i class="bi bi-briefcase me-1"></i>
+                @if (offer.yearsOfExperience > 0) {
+                  Experiencia mínima: {{ offer.yearsOfExperience }}
+                  {{ offer.yearsOfExperience === 1 ? 'año' : 'años' }}
+                } @else {
+                  No se requiere experiencia previa
+                }
+              </div>
+            </section>
+
+            @if (offer.desiredRequirements) {
+              <section>
+                <h2 class="h5 fw-bold">Requisitos deseables</h2>
+                <p class="texto-largo mb-0">{{ offer.desiredRequirements }}</p>
+              </section>
+            }
+
+            @if (offer.professions.length > 0) {
+              <section>
+                <h2 class="h5 fw-bold">Profesiones</h2>
+                <div class="d-flex flex-wrap gap-2">
+                  @for (profession of offer.professions; track profession.id) {
+                    <span class="chip">{{ profession.name }}</span>
+                  }
+                </div>
+              </section>
+            }
+
+            @if (offer.skills.length > 0) {
+              <section>
+                <h2 class="h5 fw-bold">Habilidades</h2>
+                @if (requiredSkills(offer).length > 0) {
+                  <div class="small fw-semibold text-secondary mb-1">Obligatorias</div>
+                  <div class="d-flex flex-wrap gap-2 mb-3">
+                    @for (skill of requiredSkills(offer); track skill.id) {
+                      <span class="badge skill fs-6">{{ skill.name }}</span>
+                    }
+                  </div>
+                }
+                @if (desiredSkills(offer).length > 0) {
+                  <div class="small fw-semibold text-secondary mb-1">Deseables</div>
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (skill of desiredSkills(offer); track skill.id) {
+                      <span class="badge text-bg-light border fs-6 fw-semibold">{{
+                        skill.name
+                      }}</span>
+                    }
+                  </div>
+                }
+              </section>
+            }
+
+            @if (offer.benefits && offer.benefits.length > 0) {
+              <section>
+                <h2 class="h5 fw-bold">Beneficios</h2>
+                <ul class="list-unstyled row g-2 mb-0">
+                  @for (benefit of offer.benefits; track $index) {
+                    <li class="col-sm-6 d-flex gap-2">
+                      <i class="bi bi-check2-circle text-guinda"></i> {{ benefit }}
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+          </div>
+        </div>
+      </div>
+
+      <aside class="col-lg-4 d-flex flex-column gap-3">
+        <div class="card">
+          <div class="card-body p-4">
+            @if (!authService.currentUser()) {
+              <a
+                routerLink="/login"
+                [queryParams]="{ returnUrl: currentUrl }"
+                class="btn btn-primary btn-lg w-100 py-3"
+              >
+                <i class="bi bi-box-arrow-in-right me-1"></i> Inicia sesión para postular
+              </a>
+              <p class="small text-secondary text-center mt-2 mb-0">
+                ¿No tienes cuenta?
+                <a routerLink="/register/applicant" class="fw-semibold">Regístrate gratis</a>
+              </p>
+            } @else if (!authService.hasRole('POSTULANTE')) {
+              <p class="small text-secondary mb-0">
+                <i class="bi bi-info-circle me-1"></i> Solo los postulantes pueden postular a las
+                ofertas.
+              </p>
+            } @else if (profileError()) {
+              <div class="alert alert-danger small mb-0">
+                No pudimos cargar tu perfil. Recarga la página para postular.
+              </div>
+            } @else if (profile(); as profile) {
+              <div class="d-flex justify-content-between small mb-1">
+                <span class="fw-semibold">Tu perfil</span>
+                <span class="fw-bold">{{ profile.completionPercentage }} %</span>
+              </div>
+              <div
+                class="progress mb-3"
+                role="progressbar"
+                aria-label="Perfil completado"
+                [attr.aria-valuenow]="profile.completionPercentage"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="height: 8px"
+              >
+                <div
+                  class="progress-bar"
+                  [class.bg-success]="canApply(profile)"
+                  [class.bg-warning]="!canApply(profile)"
+                  [style.width.%]="profile.completionPercentage"
+                ></div>
+              </div>
+              @if (myApplicationStatus(); as status) {
+                <div class="alert alert-success small mb-2">
+                  <i class="bi bi-check-circle-fill me-1"></i> Ya postulaste a esta oferta. Estado:
+                  <span class="badge" [class]="statusClass(status)">{{ statusLabel(status) }}</span>
+                </div>
+                <a routerLink="/applicant/applications" class="btn btn-outline-primary w-100">
+                  Ver mis postulaciones
+                </a>
+              } @else {
+                <button
+                  type="button"
+                  class="btn btn-primary btn-lg w-100 py-3"
+                  (click)="showApplyModal.set(true)"
+                >
+                  <i class="bi bi-send me-1"></i> Postular
+                </button>
+              }
+            }
+            <p class="small text-secondary text-center mt-3 mb-0">
+              <i class="bi bi-hourglass-split me-1"></i> {{ daysLeft(offer) }}
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h2 class="h6 fw-bold mb-3">Sobre la empresa</h2>
+            <div class="d-flex gap-3 align-items-center mb-2">
+              <app-company-logo [name]="offer.company.businessName" [logo]="offer.company.logo" />
+              <div>
+                <div class="fw-semibold">{{ offer.company.businessName }}</div>
+                <div class="small text-secondary">{{ offer.company.sector }}</div>
+              </div>
+            </div>
+            <p class="small text-secondary texto-largo mb-0">{{ offer.company.description }}</p>
+          </div>
+        </div>
+
+        <div class="alert alert-light border small mb-0 d-flex gap-2">
+          <i class="bi bi-shield-check text-success fs-5"></i>
+          <div>
+            La Gobernación nunca te pedirá pagos para postular. Si una empresa lo hace, comunícalo a
+            la Unidad de Empleo de la Gobernación.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    @if (showApplyModal() && profile(); as profile) {
+      <app-apply-modal
+        [offer]="offer"
+        [profile]="profile"
+        (closed)="showApplyModal.set(false)"
+        (applied)="loadMyApplication(offer.id)"
+      />
+    }
+  }
+</div>

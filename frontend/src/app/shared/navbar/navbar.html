@@ -1,0 +1,139 @@
+<nav class="navbar navbar-expand-lg gd-navbar py-2" data-bs-theme="dark">
+  <div class="container">
+    <a class="navbar-brand" routerLink="/" (click)="closeMenu()">
+      <img src="img/escudo.png" class="gd-escudo" alt="Escudo del Departamento de Oruro" />
+      <span class="fw-bold">
+        Bolsa de Trabajo Departamental
+        <small class="d-none d-md-block"
+          >G.A.D.OR. · Gobierno Autónomo Departamental de Oruro</small
+        >
+      </span>
+    </a>
+    <button
+      class="navbar-toggler border-0"
+      type="button"
+      aria-controls="menu-principal"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-label]="menuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="menu-principal" [class.show]="menuOpen()">
+      <ul class="navbar-nav ms-auto me-lg-3">
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMenu()"
+            >Inicio</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/job-offers"
+            routerLinkActive="active"
+            (click)="closeMenu()"
+            >Ofertas</a
+          >
+        </li>
+        @if (authService.hasRole('POSTULANTE')) {
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/applicant/applications"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Mis postulaciones</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/applicant/favorites"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Favoritos</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/applicant/profile"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Mi perfil</a
+            >
+          </li>
+        } @else if (authService.hasRole('EMPRESA')) {
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/company/job-offers"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Mis ofertas</a
+            >
+          </li>
+        } @else if (authService.hasRole('SUPERADMIN')) {
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/admin/companies"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Empresas</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              routerLink="/admin/job-offers"
+              routerLinkActive="active"
+              (click)="closeMenu()"
+              >Ofertas por revisar</a
+            >
+          </li>
+        } @else if (!authService.currentUser()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/" fragment="como" (click)="closeMenu()"
+              >¿Cómo funciona?</a
+            >
+          </li>
+        }
+      </ul>
+      @if (authService.currentUser(); as user) {
+        <div class="d-flex flex-wrap align-items-center gap-2 pb-2 pb-lg-0">
+          <a class="btn btn-outline-light" [routerLink]="panelUrl()" (click)="closeMenu()">
+            <i class="bi bi-person-circle me-1"></i> {{ user.name }}
+          </a>
+          <a
+            class="btn btn-outline-light"
+            routerLink="/change-password"
+            title="Cambiar contraseña"
+            aria-label="Cambiar contraseña"
+            (click)="closeMenu()"
+          >
+            <i class="bi bi-key"></i>
+          </a>
+          <button type="button" class="btn btn-ocre" (click)="logout()">
+            <i class="bi bi-box-arrow-right me-1"></i> Salir
+          </button>
+        </div>
+      } @else {
+        <div class="d-flex flex-wrap gap-2 pb-2 pb-lg-0">
+          <a class="btn btn-outline-light" routerLink="/login" (click)="closeMenu()"
+            >Iniciar sesión</a
+          >
+          <a class="btn btn-ocre" routerLink="/register/applicant" (click)="closeMenu()"
+            >Registrarme</a
+          >
+        </div>
+      }
+    </div>
+  </div>
+</nav>
+<div class="aguayo"></div>

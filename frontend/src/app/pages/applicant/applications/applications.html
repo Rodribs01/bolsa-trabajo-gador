@@ -1,0 +1,211 @@
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 fw-bold mb-0">Mis postulaciones</h1>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <div class="btn-group" role="group" aria-label="Filtrar postulaciones">
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="filter() === 'all'"
+          [class.btn-outline-primary]="filter() !== 'all'"
+          (click)="filter.set('all')"
+        >
+          Todas ({{ applications().length }})
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="filter() === 'active'"
+          [class.btn-outline-primary]="filter() !== 'active'"
+          (click)="filter.set('active')"
+        >
+          En curso ({{ countActive() }})
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [class.btn-primary]="filter() === 'finished'"
+          [class.btn-outline-primary]="filter() !== 'finished'"
+          (click)="filter.set('finished')"
+        >
+          Finalizadas ({{ applications().length - countActive() }})
+        </button>
+      </div>
+      <label for="applications-search" class="visually-hidden">Buscar por cargo o empresa</label>
+      <input
+        id="applications-search"
+        class="form-control form-control-sm"
+        style="width: 220px"
+        placeholder="Buscar por cargo o empresa"
+        (input)="onSearch($event)"
+      />
+    </div>
+  </div>
+
+  @if (actionMessage()) {
+    <div class="alert alert-success small">{{ actionMessage() }}</div>
+  }
+  @if (errorMessage()) {
+    <div class="alert alert-danger small">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando tus postulaciones</span>
+      </div>
+    </div>
+  } @else if (applications().length === 0) {
+    <div class="card">
+      <div class="card-body text-center text-secondary py-5">
+        <i class="bi bi-send fs-2 d-block mb-2"></i>
+        Aún no postulaste a ninguna oferta.
+        <div class="mt-3">
+          <a routerLink="/job-offers" class="btn btn-primary">Buscar ofertas</a>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="row g-3">
+      <div [class]="selected() ? 'col-lg-8' : 'col-12'">
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  <th scope="col">Oferta</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Coincidencia</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col" class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (application of visibleApplications(); track application.id) {
+                  <tr [class.table-active]="selected()?.id === application.id">
+                    <td style="min-width: 200px">
+                      <div class="fw-semibold">{{ application.offer.title }}</div>
+                      <div class="small text-secondary">
+                        {{ application.offer.company.businessName }}
+                      </div>
+                    </td>
+                    <td class="text-nowrap">{{ date(application.createdAt) }}</td>
+                    <td style="min-width: 130px">
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height: 6px">
+                          <div
+                            class="progress-bar"
+                            [class]="matchColor(application.matchPercentage)"
+                            [style.width.%]="application.matchPercentage"
+                          ></div>
+                        </div>
+                        <span class="small fw-semibold">{{ application.matchPercentage }} %</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [class]="statusClass(application.status)">{{
+                        statusLabel(application.status)
+                      }}</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [attr.aria-label]="'Ver detalle de ' + application.offer.title"
+                        (click)="selected.set(application)"
+                      >
+                        <i class="bi bi-eye"></i>
+                      </button>
+                      @if (application.status === 'POSTULADO') {
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger ms-1"
+                          (click)="withdraw(application)"
+                        >
+                          <i class="bi bi-x-circle me-1"></i> Retirar
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="text-center text-secondary py-4">
+                      No hay postulaciones con ese filtro.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="small text-secondary mt-2 mb-0">
+          <i class="bi bi-info-circle me-1"></i> Solo puedes retirar una postulación mientras está
+          en <span class="badge st-postulado">POSTULADO</span>. Una postulación retirada no se puede
+          repetir.
+        </p>
+      </div>
+
+      @if (selected(); as application) {
+        <aside class="col-lg-4">
+          <div class="card">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge" [class]="statusClass(application.status)">{{
+                  statusLabel(application.status)
+                }}</span>
+                <button
+                  type="button"
+                  class="btn-close"
+                  aria-label="Cerrar detalle"
+                  (click)="selected.set(null)"
+                ></button>
+              </div>
+              <h2 class="h5 fw-bold mb-1">{{ application.offer.title }}</h2>
+              <p class="small text-secondary">
+                {{ application.offer.company.businessName }} · {{ application.matchPercentage }} %
+                de coincidencia
+              </p>
+              <div class="small fw-semibold text-secondary text-uppercase mb-2">
+                Línea de tiempo
+              </div>
+              <ol class="list-unstyled linea-tiempo mb-3">
+                @for (step of timeline(application); track step.label) {
+                  <li>
+                    <span
+                      class="punto"
+                      [class.hecho]="step.done"
+                      [class.bg-danger]="step.label === 'RECHAZADO'"
+                      [class.bg-secondary]="step.label === 'RETIRADO'"
+                    >
+                      @if (step.done) {
+                        <i class="bi bi-check"></i>
+                      }
+                    </span>
+                    <div [class.fw-semibold]="step.done" [class.text-secondary]="!step.done">
+                      {{ statusLabel(step.label) }}
+                    </div>
+                    @if (step.label === 'POSTULADO') {
+                      <div class="small text-secondary">{{ date(application.createdAt) }}</div>
+                    }
+                  </li>
+                }
+              </ol>
+              @if (application.available) {
+                <a
+                  [routerLink]="['/job-offers', application.offer.id]"
+                  class="btn btn-outline-primary w-100"
+                >
+                  <i class="bi bi-box-arrow-up-right me-1"></i> Ver oferta
+                </a>
+              } @else {
+                <div class="alert alert-light border small mb-0">
+                  Esta oferta ya no está disponible.
+                </div>
+              }
+            </div>
+          </div>
+        </aside>
+      }
+    </div>
+  }
+</div>

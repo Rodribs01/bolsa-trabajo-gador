@@ -1,0 +1,54 @@
+<h2 class="h5 fw-bold mb-1">CV en PDF</h2>
+<p class="small text-secondary mb-3">
+  Es obligatorio para postular. Las empresas lo descargan cuando revisan tu postulación. Solo PDF,
+  máximo 5 MB.
+</p>
+
+@if (errorMessage()) {
+  <div class="alert alert-danger small">{{ errorMessage() }}</div>
+}
+@if (successMessage()) {
+  <div class="alert alert-success small">{{ successMessage() }}</div>
+}
+
+@if (hasCv()) {
+  <div class="d-flex flex-wrap align-items-center gap-3 border rounded p-3 bg-white">
+    <i class="bi bi-file-earmark-pdf-fill fs-2 text-danger"></i>
+    <div class="flex-grow-1">
+      <div class="fw-semibold">Tu CV está cargado</div>
+      <div class="small text-secondary">Puedes verlo o reemplazarlo por uno nuevo.</div>
+    </div>
+    <button type="button" class="btn btn-outline-secondary" (click)="view()">
+      <i class="bi bi-eye me-1"></i> Ver
+    </button>
+    <label for="cv-file" class="btn btn-outline-primary mb-0">
+      @if (uploading()) {
+        <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+      } @else {
+        <i class="bi bi-arrow-repeat me-1"></i>
+      }
+      Reemplazar
+    </label>
+  </div>
+} @else {
+  <label for="cv-file" class="d-block text-center p-4 mb-0 zona-archivo">
+    @if (uploading()) {
+      <span class="spinner-border text-secondary" aria-hidden="true"></span>
+      <div class="fw-semibold mt-2">Subiendo tu CV...</div>
+    } @else {
+      <i class="bi bi-file-earmark-arrow-up fs-2 text-ocre"></i>
+      <div class="fw-semibold mt-1">
+        <span class="text-guinda text-decoration-underline">Elige tu CV en PDF</span>
+      </div>
+      <div class="small text-secondary">Solo .pdf · máx. 5 MB</div>
+    }
+  </label>
+}
+<input
+  id="cv-file"
+  type="file"
+  class="d-none"
+  accept="application/pdf"
+  [disabled]="uploading()"
+  (change)="onFileSelected($event)"
+/>
