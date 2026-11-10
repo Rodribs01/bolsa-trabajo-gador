@@ -79,16 +79,20 @@ export class ReportsService {
         'La fecha "desde" no puede ser posterior a la fecha "hasta"',
       );
     }
+    let report: ReportData;
     if (type === ReportType.COMPANIES) {
-      return this.companiesReport(dto);
+      report = await this.companiesReport(dto);
+    } else if (type === ReportType.APPLICANTS) {
+      report = await this.applicantsReport(dto);
+    } else if (type === ReportType.JOB_OFFERS) {
+      report = await this.jobOffersReport(dto);
+    } else {
+      report = await this.hiringsReport(dto);
     }
-    if (type === ReportType.APPLICANTS) {
-      return this.applicantsReport(dto);
+    if (report.rows.length === MAX_ROWS) {
+      report.summary += `   (Se muestran solo las primeras ${MAX_ROWS} filas: acorta el periodo)`;
     }
-    if (type === ReportType.JOB_OFFERS) {
-      return this.jobOffersReport(dto);
-    }
-    return this.hiringsReport(dto);
+    return report;
   }
 
   async getIssuerName(userId: number): Promise<string> {

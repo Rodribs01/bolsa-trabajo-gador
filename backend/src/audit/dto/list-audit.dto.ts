@@ -1,5 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
+  IsDateString,
   IsEnum,
   IsInt,
   IsOptional,
@@ -14,10 +15,12 @@ import { AuditAction } from '../../common/enums/audit-action.enum.js';
 export class ListAuditDto {
   @IsOptional()
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'La fecha desde no es válida' })
+  @IsDateString({ strict: true }, { message: 'La fecha desde no es válida' })
   from?: string;
 
   @IsOptional()
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'La fecha hasta no es válida' })
+  @IsDateString({ strict: true }, { message: 'La fecha hasta no es válida' })
   to?: string;
 
   @IsOptional()
@@ -40,7 +43,7 @@ export class ListAuditDto {
   @Type(() => Number)
   @IsInt({ message: 'La página debe ser un número' })
   @Min(1, { message: 'La página debe ser mayor que 0' })
-  @Max(100000, { message: 'La página es demasiado alta' })
+  @Max(10000, { message: 'La página es demasiado alta' })
   page?: number;
 
   @IsOptional()

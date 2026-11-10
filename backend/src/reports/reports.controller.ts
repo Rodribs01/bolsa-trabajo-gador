@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { ReportType } from '../common/enums/report-type.enum.js';
 import { RoleName } from '../common/enums/role-name.enum.js';
@@ -32,6 +33,7 @@ export class ReportsController {
   ) {}
 
   @Get(':type')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   async download(
     @Req() request: AuthenticatedRequest,
     @Param(

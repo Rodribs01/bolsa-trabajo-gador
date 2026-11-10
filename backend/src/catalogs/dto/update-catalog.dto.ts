@@ -18,6 +18,7 @@ export class UpdateCatalogDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt({ message: 'El departamento no es válido' })
+  @Min(1, { message: 'El departamento no es válido' })
   parentId?: number;
 
   @IsOptional()
