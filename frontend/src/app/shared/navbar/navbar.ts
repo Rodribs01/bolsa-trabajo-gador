@@ -13,6 +13,7 @@ export class Navbar {
   notificationService = inject(NotificationService);
   private router = inject(Router);
   menuOpen = signal(false);
+  adminMenuOpen = signal(false);
 
   constructor() {
     this.router.events.subscribe((event) => {
@@ -24,6 +25,17 @@ export class Navbar {
 
   closeMenu(): void {
     this.menuOpen.set(false);
+    this.adminMenuOpen.set(false);
+  }
+
+  isAdminSection(): boolean {
+    const url = this.router.url;
+    return (
+      url.startsWith('/admin/reports') ||
+      url.startsWith('/admin/catalogs') ||
+      url.startsWith('/admin/settings') ||
+      url.startsWith('/admin/audit')
+    );
   }
 
   logout(): void {
