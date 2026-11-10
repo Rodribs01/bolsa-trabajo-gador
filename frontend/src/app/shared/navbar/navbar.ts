@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { PushService } from '../../core/services/push.service';
 
 @Component({
   selector: 'app-navbar',
@@ -11,6 +12,7 @@ import { NotificationService } from '../../core/services/notification.service';
 export class Navbar {
   authService = inject(AuthService);
   notificationService = inject(NotificationService);
+  private pushService = inject(PushService);
   private router = inject(Router);
   menuOpen = signal(false);
   adminMenuOpen = signal(false);
@@ -41,6 +43,7 @@ export class Navbar {
   logout(): void {
     this.closeMenu();
     this.notificationService.unreadCount.set(0);
+    this.pushService.forgetDevice();
     this.authService.logout();
   }
 

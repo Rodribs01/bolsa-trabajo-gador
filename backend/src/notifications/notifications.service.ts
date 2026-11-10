@@ -7,6 +7,7 @@ import { NotificationType } from '../common/enums/notification-type.enum.js';
 import { User } from '../users/entities/user.entity.js';
 import { Notification } from './entities/notification.entity.js';
 import { MailService } from './mail.service.js';
+import { PushService } from './push.service.js';
 
 export interface NewNotification {
   userId: number;
@@ -26,6 +27,7 @@ export class NotificationsService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly mailService: MailService,
+    private readonly pushService: PushService,
     private readonly config: ConfigService,
   ) {}
 
@@ -55,6 +57,14 @@ export class NotificationsService {
         error,
       );
     });
+    this.pushService
+      .send(data.userId, data.title, data.message, data.link)
+      .catch((error) => {
+        this.logger.error(
+          `No se pudo enviar el aviso push al usuario ${data.userId}`,
+          error,
+        );
+      });
   }
 
   async findMine(userId: number, dto: PaginationDto) {

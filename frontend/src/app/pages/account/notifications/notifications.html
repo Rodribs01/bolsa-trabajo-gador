@@ -11,6 +11,59 @@
     }
   </div>
 
+  <div class="card mb-3">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3">
+      <span class="gd-icono flex-shrink-0"><i class="bi bi-phone-vibrate"></i></span>
+      <div class="flex-grow-1" style="min-width: 220px">
+        <div class="fw-semibold">Avisos en este dispositivo</div>
+        <div class="small text-secondary">
+          @if (!pushService.isSupported()) {
+            Este navegador no permite avisos. Usa Chrome o instala la aplicación en tu celular.
+          } @else if (pushService.isBlocked()) {
+            Bloqueaste los avisos de este sitio. Permítelos desde la configuración del navegador
+            (ícono del candado junto a la dirección).
+          } @else if (pushService.endpoint()) {
+            Activados: te avisaremos aunque la aplicación esté cerrada.
+          } @else {
+            Actívalos para enterarte al instante cuando haya novedades.
+          }
+        </div>
+      </div>
+      @if (pushService.isSupported() && !pushService.isBlocked()) {
+        @if (pushService.endpoint()) {
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm"
+            [disabled]="pushBusy()"
+            (click)="disablePush()"
+          >
+            <i class="bi bi-bell-slash me-1"></i> Desactivar
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            [disabled]="pushBusy()"
+            (click)="enablePush()"
+          >
+            @if (pushBusy()) {
+              <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+            } @else {
+              <i class="bi bi-bell me-1"></i>
+            }
+            Activar avisos
+          </button>
+        }
+      }
+    </div>
+    @if (pushMessage()) {
+      <div class="alert alert-success small rounded-0 rounded-bottom mb-0">{{ pushMessage() }}</div>
+    }
+    @if (pushError()) {
+      <div class="alert alert-danger small rounded-0 rounded-bottom mb-0">{{ pushError() }}</div>
+    }
+  </div>
+
   @if (errorMessage()) {
     <div class="alert alert-danger small">{{ errorMessage() }}</div>
   }
