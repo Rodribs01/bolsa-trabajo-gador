@@ -11,9 +11,10 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
+  app.set('trust proxy', 1);
   app.setGlobalPrefix('api');
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-  app.enableCors({ origin: config.get<string>('FRONTEND_URL') });
+  app.enableCors({ origin: config.getOrThrow<string>('FRONTEND_URL') });
 
   const uploadsDir = resolve(config.get<string>('UPLOADS_DIR') ?? 'uploads');
   app.useStaticAssets(join(uploadsDir, 'public'), { prefix: '/uploads' });

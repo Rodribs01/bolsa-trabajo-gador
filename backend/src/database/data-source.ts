@@ -3,6 +3,17 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 
 config({ path: ['../.env', '.env'], quiet: true });
 
+function sslOptions() {
+  if (process.env.DB_SSL !== 'true') {
+    return undefined;
+  }
+  const ca = process.env.DB_SSL_CA ?? '';
+  if (!ca) {
+    return { minVersion: 'TLSv1.2', rejectUnauthorized: true };
+  }
+  return { ca: ca.replaceAll('\\n', '\n') };
+}
+
 export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
   host: process.env.DB_HOST,
@@ -16,6 +27,7 @@ export const dataSourceOptions: DataSourceOptions = {
   migrations: [__dirname + '/migrations/*.js'],
   synchronize: false,
   extra: { decimalNumbers: true },
+  ssl: sslOptions(),
 };
 
 export default new DataSource(dataSourceOptions);
