@@ -72,6 +72,21 @@ export const routes: Routes = [
       },
       { path: 'companies', component: Companies, title: 'Validación de empresas' },
       { path: 'job-offers', component: OffersReview, title: 'Ofertas por revisar' },
+      {
+        path: 'catalogs',
+        loadComponent: () => import('./pages/admin/catalogs/catalogs').then((m) => m.Catalogs),
+        title: 'Catálogos',
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/admin/settings/settings').then((m) => m.Settings),
+        title: 'Configuración',
+      },
+      {
+        path: 'audit',
+        loadComponent: () => import('./pages/admin/audit/audit').then((m) => m.Audit),
+        title: 'Auditoría',
+      },
     ],
   },
   {

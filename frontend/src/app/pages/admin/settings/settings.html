@@ -1,0 +1,83 @@
+<div class="container py-4">
+  <h1 class="h3 fw-bold mb-3">Configuración</h1>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando configuración</span>
+      </div>
+    </div>
+  } @else {
+    <div class="card" style="max-width: 720px">
+      <form class="card-body" [formGroup]="form" (ngSubmit)="save()">
+        <h2 class="h5 fw-bold mb-3">Parámetros de ofertas</h2>
+        @if (successMessage()) {
+          <div class="alert alert-success small">{{ successMessage() }}</div>
+        }
+        @if (errorMessage()) {
+          <div class="alert alert-danger small">{{ errorMessage() }}</div>
+        }
+
+        <label for="active-limit" class="form-label fw-semibold"
+          >Límite de ofertas activas por empresa</label
+        >
+        <div class="input-group" style="max-width: 220px">
+          <input
+            id="active-limit"
+            type="number"
+            class="form-control"
+            min="1"
+            max="50"
+            step="1"
+            formControlName="activeOffersLimit"
+            [class.is-invalid]="
+              form.controls.activeOffersLimit.touched && form.controls.activeOffersLimit.invalid
+            "
+          />
+          <span class="input-group-text">ofertas</span>
+        </div>
+        @if (form.controls.activeOffersLimit.touched && form.controls.activeOffersLimit.invalid) {
+          <div class="text-danger small mt-1">Ingresa un número entero entre 1 y 50.</div>
+        }
+        <div class="form-text mb-3">
+          Cuenta las ofertas en revisión, publicadas y en proceso de selección. Al bajar el límite,
+          las ofertas existentes no se cierran: solo se impide enviar nuevas a revisión.
+        </div>
+
+        @if (settings(); as data) {
+          <div class="alert alert-light border small d-flex gap-2 align-items-start">
+            <i class="bi bi-info-circle text-primary"></i>
+            @if (data.companiesAtLimit === 1) {
+              1 empresa ya tiene {{ data.activeOffersLimit }} o más ofertas activas.
+            } @else {
+              {{ data.companiesAtLimit }} empresas ya tienen {{ data.activeOffersLimit }} o más
+              ofertas activas.
+            }
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span class="small text-secondary">
+              @if (data.lastChange; as change) {
+                Último cambio: {{ formatDateTime(change.date) }}
+                @if (change.userName) {
+                  por {{ change.userName }}
+                }
+                ({{ change.previousValue }} &rarr; {{ change.newValue }})
+              } @else {
+                Valor inicial del sistema.
+              }
+            </span>
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">
+              @if (saving()) {
+                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+              } @else {
+                <i class="bi bi-check-lg me-1"></i>
+              }
+              Guardar
+            </button>
+          </div>
+        }
+      </form>
+    </div>
+  }
+</div>

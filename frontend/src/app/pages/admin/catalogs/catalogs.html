@@ -1,0 +1,233 @@
+<div class="container py-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h1 class="h3 fw-bold mb-0">Catálogos</h1>
+    <button type="button" class="btn btn-primary" (click)="openNew()">
+      <i class="bi bi-plus-lg me-1"></i>Agregar {{ tab().singular }}
+    </button>
+  </div>
+
+  <ul class="nav nav-tabs flex-nowrap overflow-auto mb-0" role="tablist">
+    @for (item of tabs; track item.type) {
+      <li class="nav-item" role="presentation">
+        <button
+          type="button"
+          role="tab"
+          class="nav-link text-nowrap"
+          [class.active]="tab().type === item.type"
+          [attr.aria-selected]="tab().type === item.type"
+          (click)="selectTab(item)"
+        >
+          {{ item.label }}
+        </button>
+      </li>
+    }
+  </ul>
+
+  <div class="card border-top-0 rounded-top-0">
+    <div class="card-body pb-0">
+      @if (successMessage()) {
+        <div class="alert alert-success small">{{ successMessage() }}</div>
+      }
+      @if (errorMessage()) {
+        <div class="alert alert-danger small">{{ errorMessage() }}</div>
+      }
+      <div class="row g-2 mb-3">
+        <div class="col-sm-7 col-md-5">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input
+              type="search"
+              class="form-control"
+              [placeholder]="'Buscar ' + tab().singular"
+              aria-label="Buscar"
+              [value]="search()"
+              (input)="search.set($any($event.target).value)"
+            />
+          </div>
+        </div>
+        <div class="col-sm-5 col-md-3">
+          <select
+            class="form-select"
+            aria-label="Estado"
+            [value]="statusFilter()"
+            (change)="statusFilter.set($any($event.target).value)"
+          >
+            <option value="ALL">Todos</option>
+            <option value="ACTIVE">Activos</option>
+            <option value="INACTIVE">Inactivos</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-secondary" role="status">
+          <span class="visually-hidden">Cargando</span>
+        </div>
+      </div>
+    } @else if (filteredRows().length === 0) {
+      <div class="text-center text-secondary py-5">No hay registros que coincidan.</div>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-uppercase">
+            <tr>
+              <th scope="col">Nombre</th>
+              @if (isSkills()) {
+                <th scope="col">Categoría</th>
+              }
+              @if (isMunicipality()) {
+                <th scope="col">Departamento</th>
+              }
+              <th scope="col">Estado</th>
+              <th scope="col" class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredRows(); track row.id) {
+              <tr [class.text-secondary]="!row.active">
+                <td>{{ row.name }}</td>
+                @if (isSkills() || isMunicipality()) {
+                  <td>{{ row.detail || '-' }}</td>
+                }
+                <td>
+                  @if (row.active) {
+                    <span class="badge text-bg-success">Activo</span>
+                  } @else {
+                    <span class="badge text-bg-secondary">Inactivo</span>
+                  }
+                </td>
+                <td class="text-end text-nowrap">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-link text-primary"
+                    title="Editar"
+                    (click)="openEdit(row)"
+                  >
+                    <i class="bi bi-pencil"></i>
+                    <span class="visually-hidden">Editar {{ row.name }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-link text-secondary"
+                    [title]="row.active ? 'Desactivar' : 'Activar'"
+                    (click)="toggleActive(row)"
+                  >
+                    <i class="bi" [class]="row.active ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+                    <span class="visually-hidden"
+                      >{{ row.active ? 'Desactivar' : 'Activar' }} {{ row.name }}</span
+                    >
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="card-footer small text-secondary">
+      {{ filteredRows().length }} de {{ rows().length }} registros · {{ countActive() }} activos
+    </div>
+  </div>
+</div>
+
+@if (formOpen()) {
+  <div
+    class="modal d-block"
+    style="background-color: rgba(0, 0, 0, 0.5)"
+    tabindex="-1"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="catalog-form-title"
+    (click)="closeForm()"
+  >
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <form class="modal-content" [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal-header">
+          <h2 id="catalog-form-title" class="modal-title h5 fw-bold">
+            {{ editing() ? 'Editar' : 'Agregar' }} {{ tab().singular }}
+          </h2>
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Cerrar"
+            (click)="closeForm()"
+          ></button>
+        </div>
+        <div class="modal-body">
+          @if (formError()) {
+            <div class="alert alert-danger small">{{ formError() }}</div>
+          }
+          <div class="mb-3">
+            <label for="catalog-name" class="form-label fw-semibold"
+              >Nombre <span class="text-danger">*</span></label
+            >
+            <input
+              id="catalog-name"
+              type="text"
+              class="form-control"
+              formControlName="name"
+              maxlength="100"
+              [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
+            />
+            @if (form.controls.name.touched && form.controls.name.invalid) {
+              <div class="invalid-feedback">El nombre debe tener entre 2 y 100 caracteres.</div>
+            }
+          </div>
+          @if (isMunicipality()) {
+            <div class="mb-3">
+              <label for="catalog-parent" class="form-label fw-semibold"
+                >Departamento <span class="text-danger">*</span></label
+              >
+              <select id="catalog-parent" class="form-select" formControlName="parentId">
+                @for (department of departments(); track department.id) {
+                  <option [ngValue]="department.id">{{ department.name }}</option>
+                }
+              </select>
+            </div>
+          }
+          @if (isSkills()) {
+            <div class="mb-3">
+              <label for="catalog-category" class="form-label fw-semibold">Categoría</label>
+              <input
+                id="catalog-category"
+                type="text"
+                class="form-control"
+                formControlName="category"
+                maxlength="60"
+                placeholder="Ejemplo: Programación"
+              />
+            </div>
+          }
+          @if (editing()) {
+            <div class="form-check form-switch">
+              <input
+                id="catalog-active"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                formControlName="active"
+              />
+              <label class="form-check-label" for="catalog-active">Activo</label>
+            </div>
+            <div class="form-text">
+              Desactivar no borra los datos: solo lo oculta en los formularios nuevos.
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeForm()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+            }
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
