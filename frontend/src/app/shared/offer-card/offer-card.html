@@ -4,7 +4,10 @@
       <app-company-logo [name]="offer().company.businessName" [logo]="offer().company.logo" />
       <div class="flex-grow-1" style="min-width: 0">
         <h3 class="h6 fw-bold mb-0">
-          <a [routerLink]="['/job-offers', offer().id]" class="text-reset text-decoration-none">
+          <a
+            [routerLink]="['/job-offers', offer().id]"
+            class="text-reset text-decoration-none stretched-link"
+          >
             {{ offer().title }}
           </a>
         </h3>
