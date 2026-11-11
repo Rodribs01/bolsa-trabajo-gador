@@ -4,13 +4,7 @@ import { Experience } from '../../../core/models/applicant.model';
 import { ApplicationDetail, OfferSkillMatch } from '../../../core/models/company.model';
 import { CompanyService } from '../../../core/services/company.service';
 import { getErrorMessage } from '../../../core/utils/error-message';
-import {
-  formatDate,
-  formatYears,
-  initials,
-  publicFileUrl,
-  todayInBolivia,
-} from '../../../core/utils/format';
+import { formatDate, formatYears, todayInBolivia } from '../../../core/utils/format';
 import {
   APPLICATION_STEPS,
   applicationStatusClass,
@@ -19,10 +13,11 @@ import {
   nextApplicationStatus,
   statusLabel,
 } from '../../../core/utils/status';
+import { ApplicantPhoto } from '../../../shared/applicant-photo/applicant-photo';
 
 @Component({
   selector: 'app-applicant-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, ApplicantPhoto],
   templateUrl: './applicant-detail.html',
 })
 export class ApplicantDetail implements OnInit {
@@ -58,14 +53,6 @@ export class ApplicantDetail implements OnInit {
 
   fullName(detail: ApplicationDetail): string {
     return `${detail.applicant.firstNames} ${detail.applicant.lastNames}`;
-  }
-
-  letters(detail: ApplicationDetail): string {
-    return initials(this.fullName(detail));
-  }
-
-  photoUrl(detail: ApplicationDetail): string {
-    return publicFileUrl('photos', detail.applicant.photo ?? '');
   }
 
   age(birthDate: string | null): number | null {

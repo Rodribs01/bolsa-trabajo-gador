@@ -5,14 +5,15 @@ import { CatalogItem } from '../../../../core/models/catalog.model';
 import { ApplicantService } from '../../../../core/services/applicant.service';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { getErrorMessage } from '../../../../core/utils/error-message';
-import { initials, publicFileUrl, todayInBolivia } from '../../../../core/utils/format';
+import { todayInBolivia } from '../../../../core/utils/format';
 import { PHONE_PATTERN } from '../../../../core/utils/validators';
+import { ApplicantPhoto } from '../../../../shared/applicant-photo/applicant-photo';
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
 @Component({
   selector: 'app-personal-data',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ApplicantPhoto],
   templateUrl: './personal-data.html',
 })
 export class PersonalData implements OnInit {
@@ -72,14 +73,6 @@ export class PersonalData implements OnInit {
   isInvalid(field: string): boolean {
     const control = this.profileForm.get(field);
     return control !== null && control.touched && control.invalid;
-  }
-
-  photoUrl(): string {
-    return publicFileUrl('photos', this.profile().photo ?? '');
-  }
-
-  letters(): string {
-    return initials(`${this.profile().firstNames} ${this.profile().lastNames}`);
   }
 
   save(): void {

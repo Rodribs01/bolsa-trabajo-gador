@@ -24,7 +24,10 @@
     "seed": "npm run build && node dist/database/seeds/seed.js",
     "migration:run:prod": "npm run typeorm -- migration:run",
     "seed:prod": "node dist/database/seeds/seed.js",
-    "start:render": "npm run migration:run:prod && npm run seed:prod && npm run start:prod"
+    "seed:demo": "npm run build && node dist/database/seeds/demo.seed.js",
+    "seed:demo:prod": "node dist/database/seeds/demo.seed.js",
+    "demo-files": "node dist/database/seeds/demo-files.js",
+    "start:render": "npm run migration:run:prod && npm run seed:prod && npm run seed:demo:prod && npm run demo-files && npm run start:prod"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

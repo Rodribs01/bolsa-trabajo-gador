@@ -318,8 +318,8 @@ La demo usa planes gratuitos:
 1. Nuevo **Web Service** conectado al repositorio, rama `main`.
 2. Root Directory: `backend`.
 3. Build Command: `npm ci --include=dev && npm run build`.
-4. Start Command: `npm run start:render` (aplica las migraciones pendientes, carga los datos iniciales que falten e inicia el servidor).
-5. Variables de entorno: todas las de la sección 7 con `NODE_ENV=production`, `FRONTEND_URL` con la dirección de Netlify, los datos de TiDB, `DB_SSL=true` y `MAIL_DRIVER=brevo`.
+4. Start Command: `npm run start:render` (aplica las migraciones pendientes, carga los datos iniciales que falten, carga los datos de demostración si `DEMO_PASSWORD` está definida, copia sus archivos a `uploads/` e inicia el servidor).
+5. Variables de entorno: todas las de la sección 7 con `NODE_ENV=production`, `FRONTEND_URL` con la dirección de Netlify, los datos de TiDB, `DB_SSL=true` y `MAIL_DRIVER=brevo`. `DEMO_PASSWORD` solo se define en la demo del concurso; en una instalación real se deja sin definir y la base empieza vacía.
 
 ### Frontend (Netlify)
 

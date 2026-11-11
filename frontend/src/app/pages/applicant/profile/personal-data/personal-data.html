@@ -1,10 +1,11 @@
 <div class="row g-4">
   <div class="col-lg-3 text-center">
-    @if (profile().photo) {
-      <img [src]="photoUrl()" alt="Tu foto de perfil" class="foto-perfil mb-2" />
-    } @else {
-      <span class="foto-perfil mb-2" aria-hidden="true">{{ letters() }}</span>
-    }
+    <app-applicant-photo
+      [name]="profile().firstNames + ' ' + profile().lastNames"
+      [photo]="profile().photo"
+      alt="Tu foto de perfil"
+      extraClass="mb-2"
+    />
     <div>
       <label for="profile-photo" class="btn btn-outline-primary btn-sm mb-1">
         @if (uploadingPhoto()) {
