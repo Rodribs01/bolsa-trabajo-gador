@@ -25,18 +25,12 @@
       <div class="col-xl-8 d-flex flex-column gap-3">
         <div class="card">
           <div class="card-body p-4 d-flex flex-wrap gap-4 align-items-center">
-            @if (detail.applicant.photo) {
-              <img
-                [src]="photoUrl(detail)"
-                alt=""
-                class="foto-perfil"
-                style="width: 88px; height: 88px"
-              />
-            } @else {
-              <span class="foto-perfil" style="width: 88px; height: 88px; font-size: 30px">{{
-                letters(detail)
-              }}</span>
-            }
+            <app-applicant-photo
+              [name]="fullName(detail)"
+              [photo]="detail.applicant.photo"
+              [size]="88"
+              [fontSize]="30"
+            />
             <div class="flex-grow-1" style="min-width: 220px">
               <h1 class="h4 fw-bold mb-0">{{ fullName(detail) }}</h1>
               <div class="text-secondary mb-2">

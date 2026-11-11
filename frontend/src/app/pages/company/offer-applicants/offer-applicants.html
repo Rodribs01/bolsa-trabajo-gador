@@ -96,21 +96,13 @@
         @for (card of result.items; track card.id) {
           <div class="card card-hover">
             <div class="card-body py-3 d-flex flex-wrap align-items-center gap-3">
-              @if (card.applicant.photo) {
-                <img
-                  [src]="photoUrl(card)"
-                  alt=""
-                  class="foto-perfil flex-shrink-0"
-                  style="width: 52px; height: 52px"
-                />
-              } @else {
-                <span
-                  class="foto-perfil flex-shrink-0"
-                  style="width: 52px; height: 52px; font-size: 18px"
-                  aria-hidden="true"
-                  >{{ letters(card) }}</span
-                >
-              }
+              <app-applicant-photo
+                [name]="fullName(card)"
+                [photo]="card.applicant.photo"
+                [size]="52"
+                [fontSize]="18"
+                extraClass="flex-shrink-0"
+              />
               <div style="flex: 1 1 0; min-width: 200px">
                 <div class="d-flex align-items-center gap-2">
                   <a

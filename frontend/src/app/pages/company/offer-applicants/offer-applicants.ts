@@ -7,7 +7,8 @@ import {
 } from '../../../core/models/company.model';
 import { CompanyService } from '../../../core/services/company.service';
 import { getErrorMessage } from '../../../core/utils/error-message';
-import { formatDate, formatYears, initials, publicFileUrl } from '../../../core/utils/format';
+import { ApplicantPhoto } from '../../../shared/applicant-photo/applicant-photo';
+import { formatDate, formatYears } from '../../../core/utils/format';
 import {
   APPLICATION_STEPS,
   matchTextColor,
@@ -19,7 +20,7 @@ import {
 
 @Component({
   selector: 'app-offer-applicants',
-  imports: [RouterLink],
+  imports: [RouterLink, ApplicantPhoto],
   templateUrl: './offer-applicants.html',
 })
 export class OfferApplicants implements OnInit {
@@ -98,14 +99,6 @@ export class OfferApplicants implements OnInit {
 
   fullName(card: OfferApplicationCard): string {
     return `${card.applicant.firstNames} ${card.applicant.lastNames}`;
-  }
-
-  photoUrl(card: OfferApplicationCard): string {
-    return publicFileUrl('photos', card.applicant.photo ?? '');
-  }
-
-  letters(card: OfferApplicationCard): string {
-    return initials(this.fullName(card));
   }
 
   matchColor(match: number): string {
