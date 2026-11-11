@@ -29,12 +29,11 @@ El sistema se puede instalar como una aplicación (PWA):
 - **Android (Chrome):** abre el sistema, pulsa el menú de los tres puntos y elige **Instalar aplicación** o **Agregar a la pantalla principal**.
 - **iPhone (Safari):** pulsa **Compartir** y luego **Agregar a inicio**.
 
-Aparecerá el ícono de la Bolsa de Trabajo junto a tus otras aplicaciones.
+Aparecerá el ícono de la Bolsa de Trabajo junto a tus otras aplicaciones. Si te quedas sin conexión, verás un aviso con el botón **Reintentar**.
 
 | Menú de Chrome | Instalar | Ícono en el celular |
 |---|---|---|
 | ![Opción Instalar en el menú de Chrome](capturas/movil-menu-instalar.jpg) | ![Ventana de instalación](capturas/movil-instalar.jpg) | ![Ícono instalado](capturas/movil-icono.jpg) |
- Si te quedas sin conexión, verás un aviso con el botón **Reintentar**.
 
 ### 1.3 Olvidé mi contraseña
 

@@ -35,7 +35,7 @@ También se puede crear una cuenta nueva de postulante o de empresa; el código 
 
 | Parte | Tecnología |
 |---|---|
-| Backend | NestJS, TypeScript, TypeORM (migraciones), JWT, bcrypt |
+| Backend | NestJS, TypeScript, TypeORM (migraciones), JWT, bcryptjs |
 | Base de datos | MySQL 8 |
 | Frontend | Angular, Bootstrap 5.3, Chart.js |
 | PWA | Service worker de Angular y avisos push (web-push) |
@@ -114,4 +114,4 @@ docs/       Manual técnico y manual de usuario
 
 ## Seguridad
 
-Contraseñas con bcrypt, JWT en la cabecera Authorization (sin cookies, por lo que no aplica CSRF), guards por rol y por dueño del registro, validación de todas las entradas, helmet, CORS restringido, límite de peticiones, validación de archivos y auditoría. Las credenciales van en `.env`, que no se sube al repositorio; `.env.example` lista las variables sin valores. Detalle en el [manual técnico](docs/manual_tecnico.md#5-seguridad-aplicada).
+Contraseñas con bcrypt de 10 rondas (librería bcryptjs), JWT en la cabecera Authorization (sin cookies, por lo que no aplica CSRF), guards por rol y por dueño del registro, validación de todas las entradas, helmet, CORS restringido, límite de peticiones, validación de archivos y auditoría. Las credenciales van en `.env`, que no se sube al repositorio; `.env.example` lista las variables sin valores. Detalle en el [manual técnico](docs/manual_tecnico.md#5-seguridad-aplicada).
