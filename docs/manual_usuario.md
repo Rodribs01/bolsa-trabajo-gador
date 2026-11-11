@@ -20,7 +20,7 @@ Este manual explica, paso a paso, cómo usar el sistema según el tipo de usuari
 2. Sin iniciar sesión puedes ver las ofertas publicadas y su detalle.
 3. Para postular, publicar ofertas o administrar, pulsa **Iniciar sesión**. Postulantes, empresas y administradores usan la misma pantalla de ingreso.
 
-> Captura: pantalla de inicio.
+![Pantalla de inicio](capturas/inicio.png)
 
 ### 1.2 Instalar la aplicación en el celular
 
@@ -29,7 +29,12 @@ El sistema se puede instalar como una aplicación (PWA):
 - **Android (Chrome):** abre el sistema, pulsa el menú de los tres puntos y elige **Instalar aplicación** o **Agregar a la pantalla principal**.
 - **iPhone (Safari):** pulsa **Compartir** y luego **Agregar a inicio**.
 
-Aparecerá el ícono de la Bolsa de Trabajo junto a tus otras aplicaciones. Si te quedas sin conexión, verás un aviso con el botón **Reintentar**.
+Aparecerá el ícono de la Bolsa de Trabajo junto a tus otras aplicaciones.
+
+| Menú de Chrome | Instalar | Ícono en el celular |
+|---|---|---|
+| ![Opción Instalar en el menú de Chrome](capturas/movil-menu-instalar.jpg) | ![Ventana de instalación](capturas/movil-instalar.jpg) | ![Ícono instalado](capturas/movil-icono.jpg) |
+ Si te quedas sin conexión, verás un aviso con el botón **Reintentar**.
 
 ### 1.3 Olvidé mi contraseña
 
@@ -58,7 +63,9 @@ Además, cada aviso llega a tu **correo**. Para recibirlos también en el celula
 2. En **Avisos en este dispositivo**, pulsa **Activar avisos** y acepta el permiso del navegador.
 3. Para dejar de recibirlos, pulsa **Desactivar**. Al cerrar sesión el dispositivo deja de recibir avisos de tu cuenta.
 
-> Captura: pantalla de notificaciones con la tarjeta de avisos.
+| Permiso del navegador | Aviso en el celular |
+|---|---|
+| ![Permiso para los avisos](capturas/movil-permiso.jpg) | ![Aviso push en la pantalla bloqueada](capturas/movil-aviso.jpg) |
 
 ## 2. Postulante
 
@@ -76,7 +83,7 @@ Además, cada aviso llega a tu **correo**. Para recibirlos también en el celula
 
 > Una cuenta que no se verifica en 7 días se elimina, para liberar el CI y el correo.
 
-> Captura: registro del postulante y verificación del correo.
+![Registro del postulante](capturas/registro-postulante.png)
 
 ### 2.2 Completar la hoja de vida
 
@@ -101,7 +108,7 @@ Para postular necesitas un perfil con **más de 80 %** y tu **CV en PDF**. El po
 7. **Idiomas:** elige el idioma y tu nivel.
 8. **CV en PDF:** sube tu hoja de vida en PDF de hasta **5 MB**. Puedes reemplazarla cuando quieras.
 
-> Captura: pantalla Mi perfil con el porcentaje de completitud.
+![Mi perfil con el porcentaje de completitud](capturas/perfil.png)
 
 ### 2.3 Buscar ofertas
 
@@ -111,7 +118,9 @@ Para postular necesitas un perfil con **más de 80 %** y tu **CV en PDF**. El po
 4. Pulsa una oferta para ver el detalle: requisitos, habilidades obligatorias y deseables, salario, beneficios, fecha de cierre y datos de la empresa.
 5. Pulsa el **corazón** para guardarla en **Favoritos**. Si una oferta guardada cierra al día siguiente, te llega un aviso.
 
-> Captura: listado de ofertas con filtros y detalle de una oferta.
+![Listado de ofertas con filtros](capturas/ofertas.png)
+
+![Detalle de una oferta](capturas/detalle-oferta.png)
 
 ### 2.4 Postular
 
@@ -122,7 +131,7 @@ Para postular necesitas un perfil con **más de 80 %** y tu **CV en PDF**. El po
 
 Solo se puede postular una vez a cada oferta, mientras esté publicada y antes de su fecha de cierre.
 
-> Captura: ventana de postulación.
+![Ventana de postulación](capturas/postular.png)
 
 ### 2.5 Seguir mis postulaciones
 
@@ -143,7 +152,7 @@ Solo se puede postular una vez a cada oferta, mientras esté publicada y antes d
 3. Cada cambio de estado te llega como aviso y por correo.
 4. Para **retirar** una postulación, pulsa **Retirar**. Solo es posible mientras está en **Postulado** (antes de que la empresa la vea).
 
-> Captura: Mis postulaciones.
+![Mis postulaciones](capturas/mis-postulaciones.png)
 
 ## 3. Empresa
 
@@ -162,7 +171,9 @@ Solo se puede postular una vez a cada oferta, mientras esté publicada y antes d
    - **Aprobada:** ya puedes publicar ofertas.
    - **Rechazada:** verás el motivo en tu panel. Comunícate con la Unidad de Empleo de la Gobernación.
 
-> Captura: formulario de registro de empresa y aviso de revisión.
+![Registro de empresa](capturas/registro-empresa.png)
+
+![Empresa en revisión](capturas/empresa-pendiente.png)
 
 ### 3.2 Crear una oferta
 
@@ -172,7 +183,7 @@ Solo se puede postular una vez a cada oferta, mientras esté publicada y antes d
 4. Guarda: la oferta queda en **Borrador**. Puedes editarla las veces que quieras.
 5. Cuando esté lista, pulsa **Enviar a revisión**. La oferta pasa a **En revisión** y ya no se puede editar.
 
-> Captura: formulario de nueva oferta.
+![Nueva oferta](capturas/nueva-oferta.png)
 
 ### 3.3 Estados de una oferta
 
@@ -189,7 +200,7 @@ Solo se puede postular una vez a cada oferta, mientras esté publicada y antes d
 - **Duplicar** (disponible en cualquier estado) crea una copia nueva en Borrador, útil para repetir una convocatoria.
 - Hay un **límite de ofertas activas** (en revisión, publicadas y en selección). Lo fija la Gobernación (5 por defecto) y se ve en tu panel. Para enviar otra, cierra o anula una.
 
-> Captura: tabla Mis ofertas con sus acciones.
+![Mis ofertas](capturas/mis-ofertas.png)
 
 ### 3.4 Revisar postulantes
 
@@ -200,7 +211,9 @@ Solo se puede postular una vez a cada oferta, mientras esté publicada y antes d
 5. Pulsa **Ver CV (PDF)** para abrir su hoja de vida.
 6. En **Estado de la postulación** elige el siguiente paso: preseleccionado, entrevista, finalista, contratado o rechazado. El postulante recibe un aviso y un correo con cada cambio.
 
-> Captura: lista de postulantes y perfil de un postulante.
+![Postulantes de una oferta](capturas/postulantes.png)
+
+![Perfil del postulante](capturas/perfil-postulante.png)
 
 ### 3.5 Empresa suspendida
 
@@ -221,7 +234,7 @@ Muestra, calculado en el momento:
 
 Pulsa **Actualizar** para recalcular.
 
-> Captura: dashboard.
+![Dashboard](capturas/dashboard.png)
 
 ### 4.2 Validar empresas
 
@@ -235,7 +248,7 @@ Pulsa **Actualizar** para recalcular.
    - **Reactivar** (solo empresas suspendidas): vuelve a quedar aprobada.
 5. La empresa recibe un aviso y un correo con la decisión. Todo queda en la auditoría.
 
-> Captura: validación de empresas con el detalle abierto.
+![Validación de empresas](capturas/validacion-empresas.png)
 
 ### 4.3 Revisar ofertas
 
@@ -245,7 +258,7 @@ Pulsa **Actualizar** para recalcular.
    - **Aprobar y publicar:** la oferta se publica y se avisa a los postulantes de esas profesiones.
    - **Devolver con observación:** escribe la observación (obligatoria al devolver); la oferta vuelve a Borrador.
 
-> Captura: revisión de ofertas.
+![Revisión de ofertas](capturas/revision-ofertas.png)
 
 ### 4.4 Reportes
 
@@ -254,7 +267,7 @@ Pulsa **Actualizar** para recalcular.
 3. Ajusta las fechas (déjalas vacías para todo el historial) y el filtro de estado, municipio o rubro.
 4. Pulsa **Exportar Excel** o **Exportar PDF**. El archivo lleva el membrete de la Gobernación, la fecha de emisión y tu nombre.
 
-> Captura: pantalla de reportes y un PDF de ejemplo.
+![Reportes](capturas/reportes.png)
 
 ### 4.5 Catálogos
 
@@ -265,7 +278,7 @@ Pulsa **Actualizar** para recalcular.
 5. **Editar:** pulsa el lápiz.
 6. **Desactivar o activar:** pulsa el interruptor. Desactivar no borra los datos: solo oculta la opción en los formularios nuevos.
 
-> Captura: catálogos.
+![Catálogos](capturas/catalogos.png)
 
 ### 4.6 Configuración
 
@@ -281,7 +294,7 @@ Pulsa **Actualizar** para recalcular.
 
 Se registran los inicios de sesión, las validaciones de empresas, los cambios de estado de ofertas y postulaciones, y los cambios de catálogos y configuración. Los eventos sin usuario los hizo el sistema (por ejemplo, el cierre automático de ofertas vencidas).
 
-> Captura: auditoría con el detalle de un evento.
+![Detalle de un evento de auditoría](capturas/auditoria.png)
 
 ## 5. Preguntas frecuentes
 
